@@ -1,0 +1,5 @@
+"0","# Antwort (NA ersetzen):"
+"0","electronics$ServiceContract = paste(electronics$LSP, electronics$ServiceLevel)"
+"0",""
+"0","#Lassen Sie sich zur Pruefung der Loesung den Tabellenkopf von electronics anzeigen. (Die neue Spalte muesste die letzte sein.)"
+"0","head(electronics)"

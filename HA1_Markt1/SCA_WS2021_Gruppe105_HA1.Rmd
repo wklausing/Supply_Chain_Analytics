@@ -116,10 +116,9 @@ head(Tabelle1)
 
 ```
 
-13) Waehlen Sie eine geeignete Kennzahl zur Bewertung Ihrer Shipping‐Dienstleister. Beachten Sie dabei, was die Qualiteat der Shipping‐Dienstleister ausmacht. Begruenden Sie die Wahl der Kennzahl kurz. Berechnen Sie diese Kennzahl zunaechst fuer alle Dienstleistungen als zusaetzliche Variable der Services Tabelle, d.h. fuer jede einzelne Dienstleistung.Berechnen Sie anschliessend die durchschnittliche Kennzahl der Shipping‐Dienstleister fuer die Dienstleistungen an Ihrem Produkt ueber die gesamte Laufzeit (5 Jahre).Geben Sie Ihre Ergebnisse in einer Tabelle aus, in der die Kennzahl‐Werte aufsteigend sortiert sind. Bewertungsrelevant: Begruendung,
-Code, Output.
+13) Waehlen Sie eine geeignete Kennzahl zur Bewertung Ihrer Shipping‐Dienstleister. Beachten Sie dabei, was die Qualiteat der Shipping‐Dienstleister ausmacht. Begruenden Sie die Wahl der Kennzahl kurz. Berechnen Sie diese Kennzahl zunaechst fuer alle Dienstleistungen als zusaetzliche Variable der Services Tabelle, d.h. fuer jede einzelne Dienstleistung.Berechnen Sie anschliessend die durchschnittliche Kennzahl der Shipping‐Dienstleister fuer die Dienstleistungen an Ihrem Produkt ueber die gesamte Laufzeit (5 Jahre).Geben Sie Ihre Ergebnisse in einer Tabelle aus, in der die Kennzahl‐Werte aufsteigend sortiert sind. Bewertungsrelevant: Begruendung, Code, Output.
 
-Antwort: Da bekannt ist dass die Shipping-Dienstleister die vereinbarte Lieferzeit häufig überschreiten verwenden wir On-Time Delivery Rate (OTD-Rate) als Kennzahl zur Bewertung.
+Begruendung: Da bekannt ist dass die Shipping-Dienstleister die vereinbarte Lieferzeit häufig überschreiten verwenden wir On-Time Delivery Rate (OTD-Rate) als Kennzahl zur Bewertung.
 OTD-Rate = count(DaysScheduled >= DaysExecuted) / count(Orders) 
 
 ```{r}
@@ -156,10 +155,12 @@ rm(shipping_105_vendors_ODBDD, shipping_105_vendors_total_orders, shipping_105_v
 
 14) Waehlen Sie eine geeignete Kennzahl zur Bewertung Ihrer Warehousing‐Dienstleister. Beachten Sie dabei,was die Qualiteat der Warehousing‐Dienstleister ausmacht. Begruenden Sie die Wahl der Kennzahl kurz. Berechnen Sie diese Kennzahl zunaechst fuer alle Dienstleistungen als zusaetzliche Variable der Services‐Tabelle, d.h. fuer jede einzelne Dienstleistung. Berechnen Sie anschliessend die durchschnittliche Kennzahl fuer die Warehousing‐Dienstleister fuer die Dienstleistungen an Ihrem Produkt ueber die gesamte Laufzeit (5 Jahre). Geben Sie Ihre Ergebnisse in einer Tabelle aus, in der die Kennzahl‐Werte aufsteigend sortiert sind. Bewertungsrelevant: Begruendung, Code, Output.
 
-Antwort: Schlechte Warehousing-Dienstleister führen dazu das die Waren früher als erwartet nicht verfügbar sind. Aus der Aufgabenbeschreibung geht hervor das die Warehousing-DL häufig falsche Mengenliefern, was aber erst im nachhinein auffällt. Unsere gewählte Kennzahl ist die Item Fill Rate (IFR). Sie untersucht wie genau eine Lieferung war gemessen an der bestellten Menge.
+Begruendung: Schlechte Warehousing-Dienstleister führen dazu das die Waren früher als erwartet nicht verfügbar sind. Aus der Aufgabenbeschreibung geht hervor das die Warehousing-DL häufig falsche Mengenliefern, was aber erst im nachhinein auffällt. Unsere gewählte Kennzahl ist die Item Fill Rate (IFR). Sie untersucht wie genau eine Lieferung war gemessen an der bestellten Menge.
 Item Fill Rate (IFR) = Number of Items delivered to customers / Numer of Items ordered by customer
 
 ```{r}
+#TODO Was ist wenn die Lieferung zu groß war?
+
 #Berechnen Sie diese Kennzahl zunaechst fuer alle Dienstleistungen als zusaetzliche Variable der Services‐Tabelle.
 services$IFR = services$QExecuted / services$QScheduled
 
@@ -181,7 +182,7 @@ rm(warehousing_105_vendors)
 
 15) Visualisieren Sie in geeigneter Form den Marktanteil (tatsaechliche verkaufte Menge) aller Produkte im Markt in einem ggplot. Es bietet sich an, einen aggregierten Datensatz zu nutzen. Bewertungsrelevant: Begruendung, Code, Output.
 
-Antwort: Wir haben uns für ein Tortendiagramm entschieden, da es den Marktanteil auf einfache und verständliche Weise darstellt. Zusätzlich wurde der Marktanteil in Prozent umgerechnet um die genauen Unterschiede im Nachkommerbereich einfacher zu erfassen. 
+Begruendung: Wir haben uns für ein Tortendiagramm entschieden, da es den Marktanteil auf einfache und verständliche Weise darstellt. Zusätzlich wurde der Marktanteil in Prozent umgerechnet um die genauen Unterschiede im Nachkommerbereich einfacher zu erfassen. 
 
 ```{r}
 #Entferne Lost Sales, berechne Marktanteil in Prozent und Runde auf zwei Nachkommastellen.
@@ -205,36 +206,45 @@ ggplot(marktanteil_tortendiagramm, aes(x = "", y = Percent, fill = Product)) +
   scale_fill_manual(values = mycols) +
   theme_void()
 
+#Clean up
+rm(mycols, marktanteil_tortendiagramm)
+
 ```
 
 16) Visualisieren Sie in geeigneter Form die gewaehlte Qualitaetskennzahl der Warehouse‐Dienstleister in einem ggplot. Durch die Visualisierung soll eine Vergleichbarkeit der Dienstleister moeglich sein. Unterstuetzen die abgebildeten Daten die Entscheidung fuer einen WH‐DL? Kommentieren Sie. Bewertungsrelevant: Begruendung, Code, Output, Kommentar.
+
+Begruendung: Wir entscheiden uns für einen Boxplot. Dieser gibt uns ein genauers Bild über den Median, Ausreißer und die Standartabweichung. Bevorzugt sollte der WH-DL sein der eine möglichst geringe Standartabschweihung hat und gleichzeigit am nächsten bei IFR=1 liegt. 
 ```{r}
-subset(services, service=="Warehousing") %>% 
-  ggplot(data=., aes(x=reorder(vendor, IFR, median), y=IFR)) +
+#Boxplot zeichnen lassen für WH-DL und Gruppe105. Unsere gewählt Kennzahl ist IFR.
+subset(services, service=="Warehousing" & Product=="Gruppe105") %>%
+  ggplot(., aes(x = vendor, y = IFR)) + 
   geom_boxplot() +
-  stat_summary(fun=mean, geom="point", shape=4, size=2) +
-  theme(axis.text.x = element_text(angle=45,hjust=1,vjust=1)) +
-  xlab("Vendor") +
-  ggtitle("Item Fill Rate per Warehousing-Vendor \n")
+  theme(axis.text.x = element_text(angle=45,hjust=1,vjust=1)) 
+
+cat("Kommentar: Beim Ablesen des Boxplots fällt auf wie klein die Unterschiede zwischen den WH-DL sind. VWL Warehousing hat den an IFR=1 nächsten Median, jedoch hat OPS Warehousing eine geringere Standartabweichung und liegt fast gleich auf. Eine eindeutige Entscheidung kann nicht getroffen werden.")
 ```
 
-17) Visualisieren Sie in geeigneter Form die gewaehlte Qualitaetskennzahl der Warehouse‐Dienstleister im Vergleich
-ueber die verschiedenen Regionen in einem ggplot. Wie bewerten Sie die Qualitaet der WH‐DL insgesamt?
-Kommentieren Sie. Bewertungsrelevant: Begruendung, Code, Output, Kommentar.
+17) Visualisieren Sie in geeigneter Form die gewaehlte Qualitaetskennzahl der Warehouse‐Dienstleister im Vergleich ueber die verschiedenen Regionen in einem ggplot. Wie bewerten Sie die Qualitaet der WH‐DL insgesamt? Kommentieren Sie. Bewertungsrelevant: Begruendung, Code, Output, Kommentar.
+
+Begruendung: Wir entscheiden uns für eine Heat-Map, wobei Grün besser und rot schlechter darstellt. Da es bei unseren Daten keine zu großen Lieferungen gab, eigent sich dieses Verfahren. Falls es zu große Lieferungen gegeben hätte, müssten die Daten vorher aufbereitet werden.  
 ```{r}
 subset(services, service=="Warehousing") %>% ggplot(., 
        aes(x = vendor, y = region, fill = IFR)) + 
   geom_raster() +
-  scale_fill_gradient(low = "red", high="green")
+  scale_fill_gradient(low = "red", high="green") + 
+  theme(axis.text.x = element_text(angle=45,hjust=1,vjust=1)) 
+cat("Kommentar: Es fällt auf das DWL Warehousing besonders schlecht in Japan liefert, dort sollte man auf IntEx Warehousing umgesteigen. Generel lässt die Heat-Map leicht ablesen welcher WH-DL in welcher Region gut/schlecht Liefern, gemessen an IFR.")
 ```
 
 18) Visualisieren Sie in geeigneter Form die Qualitaetskennzahl der Shipping‐Dienstleister je Monat fuer das Jahr
 2017 in einem ggplot (ueber alle Regionen zusammen) Wie bewerten Sie die Qualitaet der Shipping‐DL insgesamt?
 Kommentieren Sie. Bewertungsrelevant: Begruendung, Code, Output, Kommentar.
+
+Begruendung: Wir entscheiden uns für ein Liniendiagramm, um die Entwicklung über die Monate darzustellen. Es stellt einfach dar welcher SH-DL in welchem Monat am bessten war. Jeder DL bekommt eine eigene Linie die sich durch unterschiedliche Farben unterscheiden lassen. Wir haben die OTD-Rate als Kennzahl genommen.
 ```{r}
-
+subset(services, service=="Shipping" & Year=="2017") %>% 
+  aggregate(OTD ~vendor+Month, data=., sum) %>% 
+  ggplot(data = ., aes(x = Month, y = OTD)) + 
+  geom_line(aes(colour=vendor)) + 
+  geom_point(size = 1, aes(colour=vendor))
 ```
-
-
-
-

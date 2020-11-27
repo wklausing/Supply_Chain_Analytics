@@ -1,7 +1,0 @@
-"0","subset(services, service==""Warehousing"") %>% "
-"0","  ggplot(data=., aes(x=reorder(vendor, IFR, median), y=IFR)) +"
-"0","  geom_boxplot() +"
-"0","  stat_summary(fun=mean, geom=""point"", shape=4, size=2) +"
-"0","  theme(axis.text.x = element_text(angle=45,hjust=1,vjust=1)) +"
-"0","  xlab(""Vendor"") +"
-"0","  ggtitle(""Item Fill Rate per Warehousing-Vendor \n"")"

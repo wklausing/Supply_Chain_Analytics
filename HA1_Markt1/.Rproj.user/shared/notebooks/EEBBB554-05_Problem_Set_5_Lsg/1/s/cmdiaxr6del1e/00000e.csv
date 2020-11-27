@@ -1,0 +1,6 @@
+"0",""
+"0","# (7) Plot entsprechend (6) mit manuell festgelegten Farben"
+"0","ggplot(electronics, "
+"0","       aes(x = OrderNo, y = TimeTransit, colour = as.factor(ServiceLevel), shape = as.factor(ServiceLevel))) +"
+"0","  geom_point() + "
+"0","  scale_colour_manual(values = c(""red"", ""blue"", ""purple""))"

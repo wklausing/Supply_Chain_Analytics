@@ -1,0 +1,5 @@
+"0","# Antwort (bitte ""NULL"" ersetzen und vollstaendige verschachtelte Funktion formulieren):"
+"0","ggplot(electronics, "
+"0","       aes(x = ServiceContract, y = TimeTransit)) + "
+"0","  geom_boxplot()"
+"0",""

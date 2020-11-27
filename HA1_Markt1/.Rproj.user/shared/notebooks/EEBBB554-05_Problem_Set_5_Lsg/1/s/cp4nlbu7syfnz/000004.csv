@@ -1,0 +1,3 @@
+"0",""
+"0","# mit subset Funktion"
+"0","head(subset(electronics, Location == ""France"" & ServiceLevel == 24))"

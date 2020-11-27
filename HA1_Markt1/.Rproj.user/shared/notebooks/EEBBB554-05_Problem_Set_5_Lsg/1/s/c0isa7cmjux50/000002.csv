@@ -1,0 +1,5 @@
+"0","# Antwort (NA ersetzen):"
+"0","outliers = subset(electronics, LSP == ""AHL"" & OrderNo > 4330525 & OrderNo < 4330600 & TimeTransit > 50)"
+"0",""
+"0","# Lassen Sie sich den Tabellenkopf von outliers anzeigen"
+"0","head(outliers)"
