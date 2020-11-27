@@ -1,0 +1,4 @@
+"0","# Antwort (bitte ""data = electronic"" ersetzen entsprechend Aufgabenstellung):"
+"0","ggplot(data = subset(electronics, LSP == ""AHL""), "
+"0","       aes(x = OrderNo, y = TimeTransit)) + "
+"0","  geom_point()"

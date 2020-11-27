@@ -1,0 +1,2 @@
+"0","# mit select expression"
+"0","head(electronics[electronics$Location == ""France"" & electronics$ServiceLevel == 24 ,])"

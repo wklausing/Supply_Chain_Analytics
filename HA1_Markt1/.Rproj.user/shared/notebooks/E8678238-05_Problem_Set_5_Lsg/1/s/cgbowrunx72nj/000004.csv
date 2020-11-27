@@ -1,0 +1,5 @@
+"0","# Auszug aus Daten / Auswahl an Daten / eingeschraenkten Datensatz einer neuen Variable uebergeben"
+"0","FrenchOrders = subset(electronics, Location == ""France"")"
+"0",""
+"0","# Daten anzeigen"
+"0","head(FrenchOrders)"

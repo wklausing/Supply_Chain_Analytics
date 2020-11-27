@@ -1,0 +1,234 @@
+---
+title: "SCA_WS2021_Gruppe105_HA1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+1) Importieren Sie alle 4 Dateien und speichern Sie diese als Variablen mit passenden Namen. Geben Sie eine Zusammenfassung von jeder Variable aus. 
+```{r}
+cost = read.csv2("output_cost_8Players_v0010.csv")
+prices = read.csv2("output_prices_8Players_v0010.csv")
+services = read.csv2("output_services_8Players_v0010.csv")
+transactions = read.csv2("output_transactions_8Players_v0010.csv")
+
+# Environment zusammenfassen und anzeigen
+ls()
+# Struktur einer Variable anzeigen
+str(cost)
+str(prices)
+str(services)
+str(transactions)
+
+# Zusammenfassung einer Variable anzeigen
+summary(cost)
+summary(prices)
+summary(services)
+summary(transactions)
+```
+
+
+2) Extrahieren Sie aus den Transaktionsdaten eine Tabelle aller existierenden Supermaerkte, in der jeder Super‐ markt nur einmal enthalten ist.
+```{r}
+unique(transactions$storename, incomparables = FALSE, fromLast = FALSE)
+```
+
+3) Extrahieren Sie aus den Transaktionsdaten eine Tabelle aller existierenden Produkte, in der jedes Produkt nur einmal enthalten ist.
+```{r}
+unique(transactions$Product, incomparables = FALSE, fromLast = FALSE)
+```
+
+
+4) Extrahieren Sie aus den Servicedaten eine Tabelle aller 20 Logistikdienstleister mitsamt deren Dienstleistungen. Jeder Logistikdienstleister soll in der Liste nur einmal enthalten sein. Sortieren Sie die Tabelle nach Shipping‐DL und Warehousing‐DL. 
+```{r}
+
+
+# Daten anzeigen + Nur einmal vorkommen
+overview = data.frame(table(services$vendor, services$service, services$shipping))
+unique(services$vendor, incomparables = FALSE, fromLast = FALSE)
+ 
+#Sortieren
+sort(services$services)
+
+# eingeschraenkten Datensatz einer neuen Variable uebergeben und nach Shipping filtern
+shipping = services[services$service == "Shipping", c("vendor", "service")]
+shipping
+
+# eingeschraenkten Datensatz einer neuen Variable uebergeben und nach Warehousing filtern
+warehousing = services[services$service == "Warehousing", c("vendor", "service")]
+warehousing
+
+```
+
+
+
+5) Berechnen Sie fuer Ihre Produkte/Gruppe die verkauften Mengen (Sales) je Region. Nutzen Sie eine einzige verkettete Anweisung fuer diese Aufgabe. 
+```{r}
+# Neues DF 'VerkaufteMenge' mit aufsummierten Umsatz je Region
+VerkaufteMenge = aggregate(Sales ~ region, data = transactions, sum)
+
+#(2) Zeigen Sie den Tabellenkopf des DF VerkaufteMenge
+head(VerkaufteMenge)
+```
+
+
+
+
+6) Berechnen Sie fuer jede Region den Anteil Ihres Produkts an der tatsaechlich verkauften Menge (in %).
+
+```{r}
+ActualSales = aggregate(Sales ~ region, data = subset(transactions, Product=="Gruppe105"), sum)
+names(ActualSales)[2] = "Sales in %"
+
+head(ActualSales)
+```
+
+
+
+7) Berechnen Sie die durchschnittliche Nachfrage an verkauften Produkten pro Tag nach **Ihren Produkten/Gruppe** je Region. 
+Schaetzen Sie anschliessend die Monatsnachfrage mit einer Rechnung. Geben Sie alles in einer Tabelle aus.
+
+
+
+```{r}
+# Der Sales-Durchschnitt wird berechnet und nach Regionen aggregiert. Die Produkte, die nicht zu unserer Gruppe105 gehören werden aussortiert.
+
+Tabelle1 = aggregate(Sales ~ region, data = subset(transactions, Product=="Gruppe105"), mean)
+names(Tabelle1)[2] = "DurchschnittNachfrage"
+Tabelle1$DurchschnittNachfrage = round(Tabelle1$DurchschnittNachfrage, 2)
+#colnames(Tabelle1) = c("Sales",)
+head(Tabelle1)
+
+#Tabelle3 = aggregate(Day ~ Product, data = transactions, mean)
+#names(Tabelle3)[2] = "Avg Tage"
+#head(Tabelle3)
+
+
+
+#Tabelle1 = merge(Tabelle1, Tabelle2, by.x = "Product", by.y = "Product")
+#head(Tabelle1)
+
+
+
+```
+
+13) Waehlen Sie eine geeignete Kennzahl zur Bewertung Ihrer Shipping‐Dienstleister. Beachten Sie dabei, was die Qualiteat der Shipping‐Dienstleister ausmacht. Begruenden Sie die Wahl der Kennzahl kurz. Berechnen Sie diese Kennzahl zunaechst fuer alle Dienstleistungen als zusaetzliche Variable der Services Tabelle, d.h. fuer jede einzelne Dienstleistung.Berechnen Sie anschliessend die durchschnittliche Kennzahl der Shipping‐Dienstleister fuer die Dienstleistungen an Ihrem Produkt ueber die gesamte Laufzeit (5 Jahre).Geben Sie Ihre Ergebnisse in einer Tabelle aus, in der die Kennzahl‐Werte aufsteigend sortiert sind. Bewertungsrelevant: Begruendung,
+Code, Output.
+
+Antwort: Da bekannt ist dass die Shipping-Dienstleister die vereinbarte Lieferzeit häufig überschreiten verwenden wir On-Time Delivery Rate (OTD-Rate) als Kennzahl zur Bewertung.
+OTD-Rate = count(DaysScheduled >= DaysExecuted) / count(Orders) 
+
+```{r}
+#Berechnen Sie OTD für alle Dienstleistungen als zusaetzliche Variable der Services Tabelle.
+services$OTD = services$DaysScheduled >= services$DaysExecuted
+
+#ODBDD = Orders Delivered on or Before Due Date
+shipping_105_vendors_ODBDD <- subset(services, service == "Shipping" & Product == "Gruppe105") %>% 
+  aggregate(OTD ~ vendor, data = ., sum) %>%
+  setNames(., c("Vendor", "ODBDD"))
+
+#Anzahl an Bestellungen pro Lieferant.
+shipping_105_vendors_total_orders <- subset(services, service == "Shipping" & Product == "Gruppe105") %>% 
+  aggregate(OTD ~ vendor, data = ., length) %>%
+  setNames(., c("Vendor", "total_orders"))
+
+#Beide Dataframes mergen und OTD berechnen.
+shipping_105_vendors <- merge(x = shipping_105_vendors_ODBDD, y = shipping_105_vendors_total_orders, by = "Vendor", all = TRUE)
+shipping_105_vendors$OTB <- shipping_105_vendors$ODBDD / shipping_105_vendors$total_orders
+
+#Zu Prozent umrechnen
+shipping_105_vendors$OTB <- (shipping_105_vendors$OTB * 100) %>% round(., 2)
+
+#Ausgabe, Kennzahl‐Werte aufsteigend sortiert.
+shipping_105_vendors <- subset(shipping_105_vendors, select = -c(ODBDD,total_orders))
+shipping_105_vendors[order(-shipping_105_vendors$OTB),]
+
+#TODO Cat dazu
+
+#Clean up
+rm(shipping_105_vendors_ODBDD, shipping_105_vendors_total_orders, shipping_105_vendors)
+
+```
+
+14) Waehlen Sie eine geeignete Kennzahl zur Bewertung Ihrer Warehousing‐Dienstleister. Beachten Sie dabei,was die Qualiteat der Warehousing‐Dienstleister ausmacht. Begruenden Sie die Wahl der Kennzahl kurz. Berechnen Sie diese Kennzahl zunaechst fuer alle Dienstleistungen als zusaetzliche Variable der Services‐Tabelle, d.h. fuer jede einzelne Dienstleistung. Berechnen Sie anschliessend die durchschnittliche Kennzahl fuer die Warehousing‐Dienstleister fuer die Dienstleistungen an Ihrem Produkt ueber die gesamte Laufzeit (5 Jahre). Geben Sie Ihre Ergebnisse in einer Tabelle aus, in der die Kennzahl‐Werte aufsteigend sortiert sind. Bewertungsrelevant: Begruendung, Code, Output.
+
+Antwort: Schlechte Warehousing-Dienstleister führen dazu, das die Waren früher als erwartet nicht verfügbar sind. Als Kennzahl eigenet sich daher die Order Fill Rate. Wenn zu wenig Waren an einen Supermarkt eintreffen führt dies zu unrealisierten Verkäufen. 
+Order Fill Rate (OFR) = Order delivered complete / customer orders 
+
+```{r}
+#Beim ersten Versuch stellt sich heraus das nur eine Lieferung tatsächlich die korrekte Menge hatte. Somit eignet sich diese Kennzahl nicht zum vergleich. Stattdessen wird auf die Item Fill Rate (IFR) zurückgegriffen. Dabei wird geschaut wie nahe die gelieferte Mengen an die bestellte Menge ran kommt.
+#Item Fill Rate (IFR) = Items delivered to customer / Items ordered by customers
+services$IFR = services$QExecuted / services$QScheduled
+
+warehousing_105_vendors <- subset(services, service == "Warehousing" & Product == "Gruppe105") %>%
+  aggregate(IFR ~ vendor, data = ., mean)
+
+#Zu Prozent umrechnen
+warehousing_105_vendors$IFR <- (warehousing_105_vendors$IFR * 100) %>% round(., 2)
+
+#Sortieren und ausgeben
+warehousing_105_vendors[order(-warehousing_105_vendors$IFR),]
+
+#cat("CAPS Warehousing hat die beste Order Fill Rate mit 85,65%")
+```
+
+15) Visualisieren Sie in geeigneter Form den Marktanteil (tatsaechliche verkaufte Menge) aller Produkte im Markt in einem ggplot. Es bietet sich an, einen aggregierten Datensatz zu nutzen. Bewertungsrelevant: Begruendung, Code, Output.
+
+```{r}
+#Kuchen-Diagramm
+marktanteil_tortendiagramm <- transactions[!(transactions$Product=="Lost Sales"),] %>% 
+  aggregate(Sales ~ Product, data = ., sum) %>%
+  mutate(Percent = Sales/sum(Sales)*100)
+marktanteil_tortendiagramm$Percent = round(marktanteil_tortendiagramm$Percent, 2)
+
+# Add label position
+marktanteil_tortendiagramm <- marktanteil_tortendiagramm %>%
+  arrange(desc(Product)) %>%
+  mutate(lab.ypos = cumsum(Percent) - 0.5*Percent)
+
+mycols <- c("#0073C2FF", "#EFC000FF", "#868686FF", "#CD534CFF", "#0173C2FF", "#7FC000FF", "#861686FF", "#CD134CFF")
+
+ggplot(marktanteil_tortendiagramm, aes(x = "", y = Percent, fill = Product)) +
+  geom_bar(width = 1, stat = "identity", color = "white") +
+  coord_polar("y", start = 0) +
+  geom_text(aes(y = lab.ypos, label = Percent), color = "white") +
+  scale_fill_manual(values = mycols) +
+  theme_void()
+
+```
+
+16) Visualisieren Sie in geeigneter Form die gewaehlte Qualitaetskennzahl der Warehouse‐Dienstleister in einem ggplot. Durch die Visualisierung soll eine Vergleichbarkeit der Dienstleister moeglich sein. Unterstuetzen die abgebildeten Daten die Entscheidung fuer einen WH‐DL? Kommentieren Sie. Bewertungsrelevant: Begruendung, Code, Output, Kommentar.
+```{r}
+subset(services, service=="Warehousing") %>% 
+  ggplot(data=., aes(x=reorder(vendor, IFR, median), y=IFR)) +
+  geom_boxplot() +
+  stat_summary(fun=mean, geom="point", shape=4, size=2) +
+  theme(axis.text.x = element_text(angle=45,hjust=1,vjust=1)) +
+  xlab("Vendor") +
+  ggtitle("Item Fill Rate per Warehousing-Vendor \n")
+```
+
+17) Visualisieren Sie in geeigneter Form die gewaehlte Qualitaetskennzahl der Warehouse‐Dienstleister im Vergleich
+ueber die verschiedenen Regionen in einem ggplot. Wie bewerten Sie die Qualitaet der WH‐DL insgesamt?
+Kommentieren Sie. Bewertungsrelevant: Begruendung, Code, Output, Kommentar.
+```{r}
+subset(services, service=="Warehousing") %>% ggplot(., 
+       aes(x = vendor, y = region, fill = IFR)) + 
+  geom_raster() +
+  scale_fill_gradient(low = "red", high="green")
+```
+
+18) Visualisieren Sie in geeigneter Form die Qualitaetskennzahl der Shipping‐Dienstleister je Monat fuer das Jahr
+2017 in einem ggplot (ueber alle Regionen zusammen) Wie bewerten Sie die Qualitaet der Shipping‐DL insgesamt?
+Kommentieren Sie. Bewertungsrelevant: Begruendung, Code, Output, Kommentar.
+```{r}
+
+```
+
+
+
+

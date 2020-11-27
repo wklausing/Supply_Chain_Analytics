@@ -1,0 +1,6 @@
+"0",""
+"0","# (2) Plot entsprechend (1) mit manueller Farbwahl"
+"0","ggplot(electronics, "
+"0","       aes(x = LSP, y = Location, fill = TimeTransit)) + "
+"0","  geom_raster() +"
+"0","  scale_fill_gradient(low = ""green"", high=""red"")"

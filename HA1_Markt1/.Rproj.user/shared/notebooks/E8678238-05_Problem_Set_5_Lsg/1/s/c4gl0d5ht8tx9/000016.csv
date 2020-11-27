@@ -1,0 +1,5 @@
+"0",""
+"0","# (3) Plot mit Daten und Festlegung der Art des Plots"
+"0","ggplot(electronics, "
+"0","       aes(x = OrderNo, y = TimeTransit)) + "
+"0","  geom_point()"

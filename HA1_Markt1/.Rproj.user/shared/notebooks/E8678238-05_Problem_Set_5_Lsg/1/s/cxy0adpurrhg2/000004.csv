@@ -1,0 +1,6 @@
+"0","#(1) Neues DF 'RevenueCou' mit aufsummierten Umsatz je Land"
+"0","# Antwort (NA ersetzen):"
+"0","RevenueCou = aggregate(PriceTotal ~ Location, data = electronics, sum)"
+"0",""
+"0","#(2) Zeigen Sie den Tabellenkopf des DF RevenueCou"
+"0","head(RevenueCou)"
