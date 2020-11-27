@@ -1,4 +1,0 @@
-"0","# (1) Heat Map der Transitzeit ueber LSP und Location "
-"0","ggplot(electronics, "
-"0","       aes(x = LSP, y = Location, fill = TimeTransit)) + "
-"0","  geom_raster()"

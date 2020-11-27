@@ -1,5 +1,0 @@
-"0","# Antwort (NULL ersetzen und anpassung von P5-4F (1) uebernehmen):"
-"0","ggplot(subset(electronics, LSP == ""AHL""), "
-"0","       aes(x = OrderNo, y = TimeTransit)) + "
-"0","  xlim(4330500, 4330675) + "
-"0","  geom_point()"

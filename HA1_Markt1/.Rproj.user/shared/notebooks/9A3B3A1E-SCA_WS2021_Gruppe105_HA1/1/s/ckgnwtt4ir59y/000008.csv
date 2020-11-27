@@ -1,5 +1,0 @@
-"0","subset(services, service==""Warehousing"") %>% ggplot(., "
-"0","       aes(x = vendor, y = region, fill = IFR)) + "
-"0","  geom_raster() +"
-"0","  scale_fill_gradient(low = ""red"", high=""green"") + "
-"0","  theme(axis.text.x = element_text(angle=45,hjust=1,vjust=1)) "

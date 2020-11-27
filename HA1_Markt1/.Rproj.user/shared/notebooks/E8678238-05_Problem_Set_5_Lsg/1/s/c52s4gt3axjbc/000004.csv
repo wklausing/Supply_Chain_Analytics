@@ -1,6 +1,0 @@
-"0","#(1) Neues DF 'IFRCust' mit mittlerer IFR je Kunden"
-"0","# Antwort (NA ersetzen):"
-"0","IFRCust = aggregate(IFR ~ Customer, data = electronics, mean)"
-"0",""
-"0","#(2) Zeigen Sie den Tabellenkopf des DF IFRCust"
-"0","head(IFRCust)"

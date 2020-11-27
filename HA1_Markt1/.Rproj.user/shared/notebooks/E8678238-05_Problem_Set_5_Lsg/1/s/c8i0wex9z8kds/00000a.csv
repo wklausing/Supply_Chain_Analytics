@@ -1,4 +1,0 @@
-"0","# (1) Heat Map der Transitzeit nach OrderNo"
-"0","ggplot(electronics, "
-"0","       aes(x = OrderNo, y = """", fill = TimeTransit)) + "
-"0","  geom_raster()"

@@ -1,5 +1,0 @@
-"0","# Antwort (bitte ""NULL"" ersetzen und vollstaendige verschachtelte Funktion formulieren):"
-"0","ggplot(electronics, "
-"0","       aes(x = OrderNo, y = Location, fill = IFR)) + "
-"0","  geom_raster() +"
-"0","  scale_fill_gradient(low = ""red"", high = ""green"")"

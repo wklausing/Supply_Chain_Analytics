@@ -1,5 +1,0 @@
-"0",""
-"0","# (4) Plot entsprechend (2) mit angepasster Bins ueber Anzahl Bin"
-"0","ggplot(electronics, "
-"0","       aes(x = PriceTotal)) + "
-"0","  geom_histogram(bins = 150, fill = ""dodgerblue"", colour = ""firebrick"")"

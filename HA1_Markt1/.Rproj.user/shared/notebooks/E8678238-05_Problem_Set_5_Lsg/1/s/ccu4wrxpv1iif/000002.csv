@@ -1,7 +1,0 @@
-"0","# Antwort (NA ersetzen):"
-"0","electronics$IFR = electronics$ItemsReceived / electronics$ItemsOrdered"
-"0",""
-"0","#Wiederholen Sie den Befehl aus (2), um zu pruefen, ob Ihre Loesung funktioniert hat. "
-"0","# Es duerfte kein Datensatz angezeigt werden."
-"0","# Antwort (bitte ""NULL"" ersetzen und vollstaendige verschachtelte Funktion formulieren):"
-"0","head(subset(electronics, IFR >= 2))"

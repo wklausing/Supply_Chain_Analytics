@@ -1,6 +1,0 @@
-"0",""
-"0","# (2) Plot mit Daten. Durch Auswahl des Data Frame als ""data ="", koennen die Spalten "
-"0","# ohne zusaetzliche Nennung des DF bei der Festlegung der aesthetics genutzt werden. Die  "
-"0","# Daten sind nicht erkennbar, da keine Art des Plots festgelegt wurde"
-"0","ggplot(data = electronics, "
-"0","       aes(x = OrderNo, y = TimeTransit))"

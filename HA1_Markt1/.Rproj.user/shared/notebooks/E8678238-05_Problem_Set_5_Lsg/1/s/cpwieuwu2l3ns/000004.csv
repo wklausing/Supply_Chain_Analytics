@@ -1,5 +1,0 @@
-"0","# Spalte einer Variable anlegen"
-"0","electronics$OCT = electronics$TimeWarehouse + electronics$TimeTransit"
-"0",""
-"0","# Anzeigen einer Auswahl: Zeile 1 bis 10, Spalten LSP und OCT"
-"0","electronics[1:10 , c(""LSP"", ""OCT"")]"

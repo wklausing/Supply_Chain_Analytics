@@ -1,8 +1,0 @@
-"0","# Antwort (NA ersetzen):"
-"0","electronics = subset(electronics, !(LSP == ""AHL"" & OrderNo > 4330525 & OrderNo < 4330600 & TimeTransit > 50))"
-"0",""
-"0","# Lassen Sie sich zur Ueberpruefung erneut den Plot entsprechend (1) anzeigen. Stellen Sie daher die Y-Achse auf 0 bis 200 ein. Dies benoetigt die (angepasste) Erweiterung von (2)."
-"0","# Antwort (bitte ""NULL"" ersetzen und vollstaendige verschachtelte Funktion formulieren):"
-"0","ggplot(data = subset(electronics, LSP == ""AHL""), "
-"0","       aes(x = OrderNo, y = TimeTransit)) + "
-"0","  geom_point()"

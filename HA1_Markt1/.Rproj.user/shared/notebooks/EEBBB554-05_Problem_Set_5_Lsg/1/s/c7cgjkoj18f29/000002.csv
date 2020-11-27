@@ -1,6 +1,0 @@
-"0","# Antwort (bitte ""NULL"" ersetzen und vollstaendige verschachtelte Funktion formulieren):"
-"0","electronics[electronics$IFR == 0 ,]$ItemsReceived = electronics[electronics$IFR == 0,]$ItemsOrdered"
-"0",""
-"0","#Wiederholen Sie den Befehl aus (6), um zu pruefen, ob Ihre Loesung funktioniert hat. ItemsOrdered sollte ItemsReceived entsprechen. Die IFR muesste weiterhin fehlerhaft sein."
-"0","# Antwort (bitte ""NULL"" ersetzen und vollstaendige verschachtelte Funktion formulieren):"
-"0","head(subset(electronics, IFR == 0))"

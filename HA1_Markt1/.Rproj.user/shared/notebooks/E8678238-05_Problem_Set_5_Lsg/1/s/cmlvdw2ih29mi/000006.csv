@@ -1,3 +1,0 @@
-"0","# (1) Boxplot der bestellten Items (eindimensional / ""einfach"")"
-"0","ggplot(electronics, "
-"0","       aes(x = """", y = ItemsOrdered)) + geom_boxplot()"

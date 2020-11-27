@@ -1,6 +1,0 @@
-"0","  "
-"0","  # (8) Plot entsprechend (7) mit manuell festgelegten Achsenbeschriftungen"
-"0","ggplot(electronics, "
-"0","       aes(x = OrderNo, y = TimeTransit, colour = as.factor(ServiceLevel), shape = as.factor(ServiceLevel))) +"
-"0","  geom_point() + "
-"0","  scale_colour_manual(values = c(""red"", ""blue"", ""purple"")) + scale_x_continuous(breaks = c(4329000, 4330000, 4331000, 4332000), labels = c(""2014"", ""2015"", ""2016"", ""2017"")) + xlab(""Year"")"

@@ -1,5 +1,0 @@
-"0",""
-"0","# (2) Plot entsprechend (1) mit Fuellfarbe und Raendern"
-"0","ggplot(electronics, "
-"0","       aes(x = PriceTotal)) + "
-"0","  geom_histogram(fill = ""dodgerblue"", colour = ""firebrick"")"
