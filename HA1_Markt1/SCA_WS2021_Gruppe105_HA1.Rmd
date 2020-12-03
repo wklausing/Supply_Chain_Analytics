@@ -1,6 +1,9 @@
 ---
 title: "SCA_WS2021_Gruppe105_HA1"
-output: html_document
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -34,12 +37,11 @@ summary(services)
 summary(transactions)
 ```
 
-
-
 2) Extrahieren Sie aus den Transaktionsdaten eine Tabelle aller existierenden Supermaerkte, in der jeder Supermarkt nur einmal enthalten ist.
 ```{r}
-df = data.frame(unique(transactions$storename, incomparables = FALSE, fromLast = FALSE))
-colnames(df) = "storename"
+df = data.frame(unique(transactions$storename, 
+                       incomparables = FALSE, fromLast = FALSE))
+colnames(df) = "Store Name"
 df
 ```
 
@@ -52,7 +54,6 @@ df
 
 
 4) Extrahieren Sie aus den Servicedaten eine Tabelle aller 20 Logistikdienstleister mitsamt deren Dienstleistungen. Jeder Logistikdienstleister soll in der Liste nur einmal enthalten sein. Sortieren Sie die Tabelle nach Shipping‐DL und Warehousing‐DL. 
-
 ```{r}
 df = unique(services[c("vendor","service")])
 df = df[order(df$service, df$vendor),] 
@@ -60,55 +61,49 @@ df
 ```
 
 
-
 5) Berechnen Sie fuer Ihre Produkte/Gruppe die verkauften Mengen (Sales) je Region. Nutzen Sie eine einzige verkettete Anweisung fuer diese Aufgabe. 
 ```{r}
-aggregate(Sales ~ region, data = subset(transactions, Product == "Gruppe105"), sum) %>% head()
+df = data.frame(aggregate(Sales ~ region, data = subset(transactions, 
+                                                 Product == "Gruppe105"), sum))
+head(df)
 ```
-
 
 6) Berechnen Sie fuer jede Region den Anteil Ihres Produkts an der tatsaechlich verkauften Menge (in %).
 ```{r}
-# Um den Anteil unseres Produktes für Gruppe105 zu berechnen, müssen wir Sales nach Region aggregieren. 
-# Zudem wird die Tabelle "Product" nach allen Produkten der "Gruppe105" gefiltert.
-ActualSales = aggregate(Sales ~ region, data = subset(transactions, Product=="Gruppe105"), sum)
-
-# Um eine Übersicht zu verschaffen, haben wir zwei Spalten "Region" und "Sales %" mit data.frame() in Betracht gezogen.
-# Die zweite Spalte "Sales (%)" enthaelt die Summe der Regionen, die durch die aggregierte Sales nach Regionen dividiert wird. 
-# Anschließend wird die Dezimalzahl um zwei Stellen verschoben indem man die Spalte "Sales (%)" mit 100 multipliziert.
-# Spalte "Sales (%)" wird mit der Funktion round() auf die zweite Nachkommastelle gerundet.
-ActualSales = data.frame(ActualSales$region, 
-                   round(ActualSales$Sales / (aggregate(Sales ~ region, data=transactions, sum))$Sales * 100, 2))
-colnames(ActualSales) = c("Region", "Sales (%)")
-
-head(ActualSales)
+df = aggregate(Sales ~ region, data = subset(transactions, 
+                               Product=="Gruppe105"), sum)
+df$SalesInPercent =  round(df$Sales / (aggregate(Sales ~ region, 
+                                       data=transactions, sum))$Sales * 100, 2)
+colnames(df) = c("Region", "Sales", "Sales in %")
+df
+```
+```{r}
+cat("Um den Anteil unserer Produkte der Gruppe105 zu berechnen, haben wir alle Sales nach den jeweiligen Regionen aggregiert und sie nach Gruppe105 gefiltert. Anschließend haben wir unseren prozentualen Anteil der verkauften Menge berechnet.")
 ```
 
 
-
-7) Berechnen Sie die durchschnittliche Nachfrage an verkauften Produkten pro Tag nach **Ihren Produkten/Gruppe** je Region. 
-Schaetzen Sie anschliessend die Monatsnachfrage mit einer Rechnung. Geben Sie alles in einer Tabelle aus.
+7) Berechnen Sie die durchschnittliche Nachfrage an verkauften Produkten pro Tag nach *Ihren Produkten/Gruppe* je Region. 
+Schaetzen Sie anschliessend die Monatsnachfrage mit einer Rechnung. Geben Sie alles in einer Tabelle aus. Bewertungsrelevant: Output.
 ```{r}
+df = aggregate(cbind(Sales, Day) ~ region, data = subset(transactions, 
+                                                  Product == "Gruppe105"), sum)
+df$AvgSalesPerDay = round(df$Sales / df$Day, 2)
+
 # Für die Schätzung der Monatsnachfrage rechnen wir mit 21 Arbeitstage im Monat (laut www.arbeitsreche.de), die wir mit AvgSalesPerDay multiplizieren.
-
-DayAggr = aggregate(Day ~ region,data = subset(transactions,Product == "Gruppe105"), sum)
-AvgSales = aggregate(Sales ~ region, data = subset(transactions, Product == "Gruppe105"), sum)
-
-#Merge = merge.data.frame(DayAggr, AvgSales,  by.x = "region", by.y = "region")
-#Merge = data.frame(Merge$region, 
-#                   AvgSalesPerDay  = round(Merge$Sales / Merge$Day, 2),
-#                   AvgSalesMonth = round(Merge$Sales / Merge$Day, 2) * 21)
-#colnames(Merge) = c("region", "Average Sales per Day", "Estimated Average Sales per Month")
-#head(Merge)
-
-
-
+df$MonthlyDemand = df$AvgSalesPerDay * 21
+colnames(df) = c("Region", "Sales", "Day", 
+                 "AvgSalesperDay", "EstimatedAvgMonthlySales")
+df
+```
+```{r}
+cat("Um die durchschnittliche Nachfrage an verkauften Produkten für Gruppe105 pro Tag zu berechnen, haben wir die Summe der Sales und die Summe der Arbeitstage nach Regionen aggregiert, um anschließend die jeweiligen Summen miteinander zu divieren. In der vierten Spalte ergibt sich die Anzahl durchschnittlicher Nachfrage. Diese Zahlen haben wir mit 21 Arbeitstage multipliziert, um eine Abschaetzung der Monatsnachfrage aufzuzeigen.")
 ```
 
 
 8) Geben Sie den Logistikdienstleister aus, fuer den Ihre Gruppe im Jahr 2018 die niedrigsten Kosten zu verzeichnen hat.
 ```{r}
-MinCost = data.frame(aggregate(cost ~ vendor, data = subset(services, services$Product == "Gruppe105" & services$Year == 2018), sum))
+MinCost = data.frame(aggregate(cost ~ vendor, data = subset(services, 
+                services$Product == "Gruppe105" & services$Year == 2018), sum))
 MinCost <- MinCost[order(MinCost$cost, decreasing = FALSE),]
 head(MinCost, 1)
 
@@ -117,7 +112,8 @@ head(MinCost, 1)
 
 9) Berechnen Sie fuer die vergangenen 5 Jahre den Profit je Jahr. Bewertungsrelevant: Output.
 ```{r}
-df = data.frame(aggregate(Sales ~ Year, data = subset(transactions, transactions$Product == "Gruppe105"), sum))
+df = data.frame(aggregate(Sales ~ Year, data = subset(transactions, 
+                                  transactions$Product == "Gruppe105"), sum))
 head(df, 5)
 ```
 
@@ -126,10 +122,12 @@ Erzeugen Sie hierfuer ein DataFrame profit, welche den Profit je Monat als Varia
 Berechnen Sie ausserdem die Veraenderung des Profits (in %) von Monat zu Monat ueber die letzten 6 Monate als zusaetzliche Spalte fuer das DataFrame profit. Dabei sollte die Veraenderung fuer die erste Zeile 0 sein. 
 Geben Sie das DataFrame aus. Bewertungsrelevant: Code, Output.
 ```{r}
-profit = data.frame(aggregate(Sales ~ Month, data = subset(transactions, transactions$Month >= 7 &
-                                                                         transactions$Month <= 12 &
-                                                                         transactions$Year == 2020 &
-                                                                         transactions$Product == "Gruppe105"), sum))
+profit = data.frame(aggregate(Sales ~ Month, 
+                              data = subset(transactions, 
+                              transactions$Month >= 7 &
+                              transactions$Month <= 12 &
+                              transactions$Year == 2020 &
+                              transactions$Product == "Gruppe105"), sum))
 # Erklärung zu Column3: 
 # Dritte Spalte, erste Zeile ist 0. 
 # Die Funktion tail(Sales,-1) zeigt auf die zweite Sales-Zeile. 
@@ -138,7 +136,8 @@ profit = data.frame(aggregate(Sales ~ Month, data = subset(transactions, transac
 
 profit = cbind(profit, with(profit, {
               data.frame( #Columnx = Sales/Sales[1],
-                           Column3 = c(0, (round(1-(tail(Sales,-1)/head(Sales,-1)), 2) *100)
+                           Column3 = c(0, (round(1-(tail(Sales,-1)/
+                                                    head(Sales,-1)), 2) *100)
                                      )
                         )     
 }))
@@ -149,68 +148,110 @@ profit
 
 11) Berechnen Sie, wie viel fuer Ihre Produkte/Gruppe ueber den gesamten Zeitraum fuer Transportdienstleistungen ausgegeben wurde. Berechnen Sie dazu 2 Kennzahlen (einzeln zu berechnen): 
 (1) Wie viel wurde fuer verspaetete Transportdienstleistungen ausgegeben und 
-(2) wie viel wurde fuer puenktliche Transportdienstleis‐ tungen ausgegeben. Bewertungsrelevant: Output.
+(2) wie viel wurde fuer puenktliche Transportdienstleistungen ausgegeben. Bewertungsrelevant: Output.
 ```{r}
+# Hier wird DaysScheduled mit 0 aussortiert, da kein Zeitraum zu ermitteln ist.
+df1 = data.frame(aggregate(cost ~ vendor, 
+                           data = subset(services, 
+                           Product == "Gruppe105" &
+                           DaysScheduled != 0 &
+                           DaysExecuted > DaysScheduled), sum))
+colnames(df1) = c("vendor", "cost of late service")
+df1
+
+
+df2 = data.frame(aggregate(cost ~ vendor, 
+                           data = subset(services, 
+                           Product == "Gruppe105" &
+                           DaysScheduled != 0 &
+                          DaysScheduled <= DaysExecuted), sum))
+colnames(df2) = c("vendor", "cost of timely service")
+df2
 
 ```
 
 
-
-12) Berechnen Sie, wie viel Sie die reale Ausfuehrung einer Lagerdienstleistung tatsaechlich kostet. D.h. rechnen Sie die Gesamtkosten, die Ihr Produkt/Gruppe fuer Qscheduled erzeugt hat, auf die tatsaechliche Lagerleistung (QExecuted) um. (1) Geben Sie die Kosten pro Stueck an. (2) Berechnen Sie anschliessend, wie viel Prozent Sie mehr bezahlt haben (bei einem Vergleich von Kosten QExecuted pro Steuck zu Kosten QScheduled pro Stueck). Bewertungsrelevant: Output.
+12) Berechnen Sie, wie viel Sie die reale Ausfuehrung einer *Lagerdienstleistung* tatsaechlich kostet. D.h. rechnen Sie die Gesamtkosten, die Ihr Produkt/Gruppe fuer Qscheduled erzeugt hat, auf die tatsaechliche Lagerleistung (QExecuted) um. 
+(1) Geben Sie die Kosten pro Stueck an. 
+(2) Berechnen Sie anschliessend, wie viel Prozent Sie mehr bezahlt haben (bei einem Vergleich von Kosten QExecuted pro Steuck zu Kosten QScheduled pro Stueck). Bewertungsrelevant: Output.
 ```{r}
+df1 = aggregate(cbind(QScheduled, QExecuted, cost) ~ Product, 
+                                                 data = subset(services, 
+                                                 Product == "Gruppe105" & 
+                                                service == "Warehousing"), sum)
+# Hier werden die Kosten pro geplantes Stueck berechnet
+df1$ScheduledItem = round(df1$cost/df1$QScheduled, 2) 
 
+# Hier werden die Kosten pro tatsaechlich abgefertigtes Stueck berechnet
+df1$ExecutedItem = round(df1$cost/df1$QExecuted, 2) 
+
+# Hier wird die Differenz der Kosten von ExecutedItem und ScheduledItem in Prozent berechnet
+df1$Differ = round(df1$ExecutedItem - df1$ScheduledItem, 2)*100
+
+colnames(df1) = c("Product", "Scheduled in total", "Executed in total", "Cost", 
+                  "Scheduled Item", "Executed Item", "Difference in %")
+head(df1)
+```
+```{r}
+cat("Die reale Ausfuehrung der Warehousing bzw. Lagerdienstleistung kostete insgesamt", df1[1,3],"€, wobei",df1[1,2],"€ geplant waren. Zudem werden Kosten pro Stück von", df1[1,5], "€ geplant. Jedoch betrugen die tatsaechlichen Kosten pro Stück", df1[1,6], "€. Demzufolge ergibt sich eine prozentuale Differenz von", df1[1,7], "%, die wir mehr bezahlt haben.")
 ```
 
 
 13) Waehlen Sie eine geeignete Kennzahl zur Bewertung Ihrer Shipping‐Dienstleister. Beachten Sie dabei, was die Qualiteat der Shipping‐Dienstleister ausmacht. Begruenden Sie die Wahl der Kennzahl kurz. Berechnen Sie diese Kennzahl zunaechst fuer alle Dienstleistungen als zusaetzliche Variable der Services Tabelle, d.h. fuer jede einzelne Dienstleistung.Berechnen Sie anschliessend die durchschnittliche Kennzahl der Shipping‐Dienstleister fuer die Dienstleistungen an Ihrem Produkt ueber die gesamte Laufzeit (5 Jahre).Geben Sie Ihre Ergebnisse in einer Tabelle aus, in der die Kennzahl‐Werte aufsteigend sortiert sind. Bewertungsrelevant: Begruendung, Code, Output.
-
-Begruendung: Schlechte Shipping-DL führen dazu, das Waren später als erwartet wieder aufgefüllt werden können. Dies führt zu nicht releasierten Verkäufen. Da bekannt ist dass die Shipping-DL die vereinbarte Lieferzeit häufig überschreiten verwenden wir On-Time Delivery Rate (OTD-Rate) als Kennzahl zur Bewertung. Sie misst die Zuverlässigkeit ob Aufträge rechtzeitig geliefert werden. Das Ergebnis gibt in Prozent an wie hoch der Anteil an Lieferungen ist welche rechtzeitig angekommen sind. Z.B. sind 38,69% aller Lieferungen von Flying Mercury Shipping rechtzeitg angekommen.
-OTD-Rate = Orders Delivered on or Before Due Date / Customer Orders 
 ```{r}
 #Berechnen Sie OTD für alle Dienstleistungen als zusaetzliche Variable der Services Tabelle.
 services$OTD = services$DaysScheduled >= services$DaysExecuted
 
 #ODBDD = Orders Delivered on or Before Due Date
-shipping_105_vendors_ODBDD <- subset(services, service == "Shipping" & Product == "Gruppe105") %>% 
-  aggregate(OTD ~ vendor, data = ., sum) %>%
-  setNames(., c("Vendor", "ODBDD"))
+shipping_105_vendors_ODBDD <- subset(services, service == "Shipping" &
+                                    Product == "Gruppe105") %>% 
+                                    aggregate(OTD ~ vendor, data = ., sum) %>%
+                                    setNames(., c("Vendor", "ODBDD"))
 
 #Anzahl an Bestellungen pro Lieferant.
-shipping_105_vendors_total_orders <- subset(services, service == "Shipping" & Product == "Gruppe105") %>% 
-  aggregate(OTD ~ vendor, data = ., length) %>%
-  setNames(., c("Vendor", "total_orders"))
+shipping_105_vendors_total_orders <- subset(services, service == "Shipping" &
+                                    Product == "Gruppe105") %>% 
+                                  aggregate(OTD ~ vendor, data = ., length) %>%
+                                  setNames(., c("Vendor", "total_orders"))
 
 #Beide Dataframes mergen und OTD berechnen.
-shipping_105_vendors <- merge(x = shipping_105_vendors_ODBDD, y = shipping_105_vendors_total_orders, by = "Vendor", all = TRUE)
-shipping_105_vendors$OTB <- shipping_105_vendors$ODBDD / shipping_105_vendors$total_orders
+shipping_105_vendors <- merge(x = shipping_105_vendors_ODBDD, 
+              y = shipping_105_vendors_total_orders, by = "Vendor", all = TRUE)
+shipping_105_vendors$OTB <- shipping_105_vendors$ODBDD /
+              shipping_105_vendors$total_orders
 
 #Zu Prozent umrechnen
 shipping_105_vendors$OTB <- (shipping_105_vendors$OTB * 100) %>% round(., 2)
 
 #Ausgabe, Kennzahl‐Werte aufsteigend sortiert.
-shipping_105_vendors <- subset(shipping_105_vendors, select = -c(ODBDD,total_orders))
+shipping_105_vendors <- subset(shipping_105_vendors,
+                               select = -c(ODBDD,total_orders))
 shipping_105_vendors[order(-shipping_105_vendors$OTB),]
 
 #Clean up
-rm(shipping_105_vendors_ODBDD, shipping_105_vendors_total_orders, shipping_105_vendors)
-
+rm(shipping_105_vendors_ODBDD, shipping_105_vendors_total_orders, 
+                               shipping_105_vendors)
 ```
 
+```{r}
+cat("Begruendung zu Aufgabe 13: Schlechte Shipping-DL fuehren dazu, dass Waren spaeter als erwartet wieder aufgefuellt werden koennen. Dies fuehrt zu nicht releasierten Verkaeufen. Da bekannt ist, dass die Shipping-DL die vereinbarte Lieferzeit haeufig ueberschreiten, verwenden wir On-Time Delivery Rate (OTD-Rate) als Kennzahl zur Bewertung. Sie misst die Zuverlaessigkeit, ob Auftraege rechtzeitig geliefert werden. Das Ergebnis gibt in Prozent an wie hoch der Anteil an Lieferungen ist welche rechtzeitig angekommen sind. Z.B. sind 38,69% aller Lieferungen von Flying Mercury Shipping rechtzeitg angekommen.Diese Berechnung erfolgt mit der folgenden Formel: OTD-Rate = count(DaysScheduled >= DaysExecuted) / count(Orders)")
+```
+
+
+
 14) Waehlen Sie eine geeignete Kennzahl zur Bewertung Ihrer Warehousing‐Dienstleister. Beachten Sie dabei,was die Qualiteat der Warehousing‐Dienstleister ausmacht. Begruenden Sie die Wahl der Kennzahl kurz. Berechnen Sie diese Kennzahl zunaechst fuer alle Dienstleistungen als zusaetzliche Variable der Services‐Tabelle, d.h. fuer jede einzelne Dienstleistung. Berechnen Sie anschliessend die durchschnittliche Kennzahl fuer die Warehousing‐Dienstleister fuer die Dienstleistungen an Ihrem Produkt ueber die gesamte Laufzeit (5 Jahre). Geben Sie Ihre Ergebnisse in einer Tabelle aus, in der die Kennzahl‐Werte aufsteigend sortiert sind. Bewertungsrelevant: Begruendung, Code, Output.
-
-Begruendung: Schlechte Warehousing-Dienstleister führen dazu das die Waren früher als erwartet nicht verfügbar sind. Aus der Aufgabenbeschreibung geht hervor, das die Warehousing-DL häufig falsche Mengenliefern, was aber erst im nachhinein auffällt. Unsere gewählte Kennzahl ist die Item Fill Rate (IFR). Sie untersucht wie genau eine Lieferung war gemessen an der bestellten Menge. So Liefert z.B. CPS Warehousing im Durschnitt 85,65% von der bestellten Menge. 
-Item Fill Rate (IFR) = Number of Items delivered to customers / Numer of Items ordered by customer
-
 ```{r}
 #Berechnen Sie diese Kennzahl zunaechst fuer alle Dienstleistungen als zusaetzliche Variable der Services‐Tabelle.
 services$IFR = services$QExecuted / services$QScheduled
 
 #IFR aggregiert für jeden Warehousing-DL berechnen.
-warehousing_105_vendors <- subset(services, service == "Warehousing" & Product == "Gruppe105") %>%
-  aggregate(IFR ~ vendor, data = ., mean)
+warehousing_105_vendors <- subset(services, service == "Warehousing" & 
+                                    Product == "Gruppe105") %>%
+                           aggregate(IFR ~ vendor, data = ., mean)
 
 #Zu Prozent umrechnen.
-warehousing_105_vendors$IFR <- (warehousing_105_vendors$IFR * 100) %>% round(., 2)
+warehousing_105_vendors$IFR <- (warehousing_105_vendors$IFR * 
+                                100) %>% round(., 2)
 
 #Sortieren und ausgeben.
 warehousing_105_vendors[order(-warehousing_105_vendors$IFR),]
@@ -219,61 +260,76 @@ warehousing_105_vendors[order(-warehousing_105_vendors$IFR),]
 rm(warehousing_105_vendors)
 ```
 
+```{r}
+cat("Begruendung zu Aufgabe 14: Schlechte Warehousing-Dienstleister fuehren dazu, dass die Waren frueher als erwartet nicht verfuegbar sind. Aus der Aufgabenbeschreibung geht hervor, dass die Warehousing-DL haeufig falsche Mengen liefern, was aber erst im nachhinein auffaellt. Unsere gewaehlte Kennzahl ist die Item Fill Rate (IFR). Sie untersucht wie genau eine Lieferung war gemessen wurde an der bestellten Menge. So Liefert z. B. CPS Warehousing im Durschnitt 85,65% von der bestellten Menge und hat damit den besten Wert. Diese Berechnung erfolgt mit der folgenden Formel: Item Fill Rate (IFR) = Number of Items delivered to customers / Numer of Items ordered by customer")
+```
+
 15) Visualisieren Sie in geeigneter Form den Marktanteil (tatsaechliche verkaufte Menge) aller Produkte im Markt in einem ggplot. Es bietet sich an, einen aggregierten Datensatz zu nutzen. Bewertungsrelevant: Begruendung, Code, Output.
-
-Begruendung: Wir haben uns für ein Tortendiagramm entschieden, da es den Marktanteil auf einfache und verständliche Weise darstellt. Zusätzlich wurde der Marktanteil in Prozent umgerechnet um die genauen Unterschiede im Nachkommerbereich einfacher zu erfassen. Das Diagramm zeigt deutlich das alle Teilnehmer beinahe gleiche Marktanteile haben. Mit 12,69% ist Gruppe108 Marktführer, Gruppe101, Gruppe102, und  Gruppe104 haben mit 12,36% jeweils den niedrigsten Marktanteil.
-
 ```{r}
 #Entferne Lost Sales, berechne Marktanteil in Prozent und Runde auf zwei Nachkommastellen.
-marktanteil_tortendiagramm <- transactions[!(transactions$Product=="Lost Sales"),] %>% 
+marktanteil_tortendiagramm <- transactions[!(transactions$Product ==
+                                                           "Lost Sales"),] %>% 
   aggregate(Sales ~ Product, data = ., sum) %>%
   mutate(Percent = Sales/sum(Sales)*100)
-marktanteil_tortendiagramm$Percent = round(marktanteil_tortendiagramm$Percent, 2)
-
-#Berechne Prozente in Flächeninhalt des Kreises um. Wird gespeichert in lab.ypos
-marktanteil_tortendiagramm <- marktanteil_tortendiagramm %>%
-  mutate(lab.ypos = cumsum(Percent) - 0.5*Percent)
+marktanteil_tortendiagramm$Percent = 
+                                  round(marktanteil_tortendiagramm$Percent, 2)
 
 #Tortendiagramm zeichnen lassen.
 ggplot(marktanteil_tortendiagramm, aes(x = "", y = Percent, fill = Product)) +
-  geom_bar(width = 1, stat = "identity", color = "white") +
+  geom_bar(width = 1, stat = "identity", color = "white") + 
+  #Weiße Linie zwischen Feldern
   coord_polar("y", start = 0) +
-  geom_text(aes(y = lab.ypos, label = Percent), color = "white") +
+  geom_text(
+    aes(label = paste(Percent, "%"), 
+      x = 1.3), #x = Distanz zur Kreismitte
+      position = position_stack(vjust = 0.5)) +
   theme_void()
-
-#Clean up
-rm(marktanteil_tortendiagramm)
-
 ```
 
-16) Visualisieren Sie in geeigneter Form die gewaehlte Qualitaetskennzahl der Warehouse‐Dienstleister in einem ggplot. Durch die Visualisierung soll eine Vergleichbarkeit der Dienstleister moeglich sein. Unterstuetzen die abgebildeten Daten die Entscheidung fuer einen WH‐DL? Kommentieren Sie. Bewertungsrelevant: Begruendung, Code, Output, Kommentar.
+```{r}
+cat("Begruendung zu Aufgabe 15: Wir haben uns fuer einen Tortendiagramm entschieden, da es den Marktanteil auf einfache und verstaendliche Weise darstellt. Zusaetzlich wurde der Marktanteil in Prozent umgerechnet, um die genauen Unterschiede im Nachkommerbereich einfacher zu erfassen. Das Diagramm zeigt deutlich das alle Teilnehmer beinahe gleiche Marktanteile haben. Mit 12,69% ist Gruppe101 Marktführer. Gruppe105, Gruppe107, und  Gruppe108 haben mit 12,36% jeweils den niedrigsten Marktanteil.")
+```
 
-Begruendung: Wir entscheiden uns für einen Boxplot. Dieser gibt uns ein genauers Bild über den Median, Ausreißer und die Standartabweichung. Bevorzugt sollte der WH-DL sein der eine möglichst geringe Standartabschweihung hat und gleichzeigit am nächsten bei IFR=1 liegt. 
+
+16) Visualisieren Sie in geeigneter Form die gewaehlte Qualitaetskennzahl der Warehouse‐Dienstleister in einem ggplot. Durch die Visualisierung soll eine Vergleichbarkeit der Dienstleister moeglich sein. Unterstuetzen die abgebildeten Daten die Entscheidung fuer einen WH‐DL? Kommentieren Sie. Bewertungsrelevant: Begruendung, Code, Output, Kommentar.
 ```{r}
 #Boxplot zeichnen lassen für WH-DL und Gruppe105. Unsere gewählt Kennzahl ist IFR.
 subset(services, service=="Warehousing" & Product=="Gruppe105") %>%
   ggplot(., aes(x = vendor, y = IFR)) + 
   geom_boxplot() +
-  theme(axis.text.x = element_text(angle=45,hjust=1,vjust=1)) #X-Achsenbezeichnung anpassen, damit es lesbar ist.
-
-cat("Kommentar: Beim Ablesen des Boxplots fällt auf wie klein die Unterschiede zwischen den WH-DL sind. VWL Warehousing hat den an IFR=1 nächsten Median, jedoch hat OPS Warehousing eine geringere Standartabweichung und liegt beim Median fast gleich auf. Eine eindeutige Entscheidung kann nicht getroffen werden.")
+  theme(axis.text.x = element_text(angle=45,hjust=1,vjust=1)) 
+#X-Achsenbezeichnung anpassen, damit es lesbar ist.
 ```
 
-17) Visualisieren Sie in geeigneter Form die gewaehlte Qualitaetskennzahl der Warehouse‐Dienstleister im Vergleich ueber die verschiedenen Regionen in einem ggplot. Wie bewerten Sie die Qualitaet der WH‐DL insgesamt? Kommentieren Sie. Bewertungsrelevant: Begruendung, Code, Output, Kommentar.
-
-Begruendung: Wir entscheiden uns für eine Heat-Map, wobei Grün besser und Rot schlechter darstellt. Da es bei unseren Daten keine zu großen Lieferungen gab, eigent sich dieses Verfahren. Falls es zu große Lieferungen gegeben hätte, müssten die Daten vorher aufbereitet werden.  
 ```{r}
-subset(services, service=="Warehousing") %>% 
-  ggplot(., aes(x = vendor, y = region, fill = IFR)) + 
+cat("Begruendung zu Aufgabe 16: Wir entscheiden uns fuer einen Boxplot. Dieser gibt uns ein genaueres Bild ueber den Median, Ausreißer und die Standardabweichung. Bevorzugt sollte der WH-DL sein, der eine moeglichst geringe Standardabweihung hat und gleichzeitig am naechsten bei IFR=1 liegt.\n\n")
+
+cat("Kommentar: Beim Ablesen des Boxplots faellt uns auf wie klein die Unterschiede zwischen den WH-DL sind. DWL Warehousing hat den an IFR=1 naechsten Median, jedoch hat OPS Warehousing eine geringere Standardabweichung und liegt fast gleich auf. Eine eindeutige Entscheidung kann nicht getroffen werden.")
+```
+
+
+17) Visualisieren Sie in geeigneter Form die gewaehlte Qualitaetskennzahl der Warehouse‐Dienstleister im Vergleich ueber die verschiedenen Regionen in einem ggplot. Wie bewerten Sie die Qualitaet der WH‐DL insgesamt? Kommentieren Sie. Bewertungsrelevant: Begruendung, Code, Output, Kommentar.
+```{r}
+#Erzeuge Subset welcher nur Warehousing-DL enthält.
+subset(services, service=="Warehousing") %>% ggplot(., 
+       aes(x = vendor, y = region, fill = IFR)) + 
   geom_raster() +
   scale_fill_gradient(low = "red", high="green") + 
   theme(axis.text.x = element_text(angle=45,hjust=1,vjust=1)) 
-cat("Kommentar: Es fällt auf das DWL Warehousing besonders schlecht in Japan liefert, dort sollte man auf IntEx Warehousing umgesteigen. Generel lässt die Heat-Map leicht ablesen welcher WH-DL in welcher Region gut/schlecht Liefern, gemessen an IFR.")
 ```
 
-18) Visualisieren Sie in geeigneter Form die Qualitaetskennzahl der Shipping‐Dienstleister je Monat fuer das Jahr 2017 in einem ggplot (ueber alle Regionen zusammen) Wie bewerten Sie die Qualitaet der Shipping‐DL insgesamt? Kommentieren Sie. Bewertungsrelevant: Begruendung, Code, Output, Kommentar.
+```{r}
+cat("Begruendung zu Aufgabe 17: Wir entscheiden uns fuer eine Heat-Map, wobei die Farbe gruen besser und rot schlechter darstellt. Da es bei unseren Daten keine zu großen Lieferungen gab, eignet sich dieses Verfahren. Falls es ubermaeßig große Lieferungen gegeben haette, muessten die Daten vorher aufbereitet werden.\n\n")
 
-Begruendung: Wir wählen hier eine Heat-Map die durch unterschiedliche Farbschattierungen und einer klaren Struktur einen schnellen Überblick gibt. Auch in diesem Fall ist Grün besser als Rot. Ein Liniendiagramm eigent sich nicht, da es zu viele Linien enthält die durcheinander gehen und somit schwer zulesen sind. 
+cat("Kommentar: Es faellt auf das DWL Warehousing besonders schlecht in Japan liefert, dort sollte man auf IntEx Warehousing umgesteigen. Generel laesst die Heat-Map leicht ablesen, welcher WH-DL in welcher Region gut/schlecht liefern, gemessen an IFR.")
+```
+
+```
+
+
+18) Visualisieren Sie in geeigneter Form die Qualitaetskennzahl der Shipping‐Dienstleister je Monat fuer das Jahr
+2017 in einem ggplot (ueber alle Regionen zusammen) Wie bewerten Sie die Qualitaet der Shipping‐DL insgesamt?
+Kommentieren Sie. Bewertungsrelevant: Begruendung, Code, Output, Kommentar.
 ```{r}
 #Heat-Map zeichen lassen für Shipping-DL, Jahr=2017 und unser Produkt Gruppe105. 
 subset(services, service=="Shipping" & Year=="2017" & Product=="Gruppe105") %>% 
@@ -282,6 +338,48 @@ subset(services, service=="Shipping" & Year=="2017" & Product=="Gruppe105") %>%
   geom_raster() +
   scale_fill_gradient(low = "red", high="green") + 
   theme(axis.text.x = element_text(angle=45,hjust=1,vjust=1)) +
-  scale_y_continuous(breaks=seq(1,12,1)) #Y-Achsen Bezeichnung ändern
-cat("Kommentar: Das Diagramm zeigt das alle Lieferanten mal gut mal schlecht abschneiden. Besonders schlechte OTD Werte eines Lieferanten stechen sofort durch ein kräftiges Rot ins Auge, während besonders gute OTD Werte durch ein helles Grün auffallen. Dank der Struktur des Diagramms kann man schnell Handlungsempfehlungen ableiten. So sollte man z.B. im Februar EPD Shipping meiden und stattdessen auf HCX Shipping setzen.")
+  #Y-Achsen Bezeichnung ändern
+  scale_y_continuous(breaks=seq(1,12,1)) 
 ```
+
+```{r}
+cat("Begruendung zu Aufgabe 18: Wir waehlen hier eine Heat-Map die durch unterschiedliche Farbschattierungen und einer klaren Struktur einen schnellen Ueberblick gibt. Auch in diesem Fall ist gruen besser als rot. Ein Liniendiagramm eignet sich nicht, da es zu viele Linien enthaelt, die durcheinander gehen und somit schwer zu lesen sind.\n\n")
+
+cat("Kommentar: Das Diagramm zeigt, dass alle Lieferanten mal gut und mal schlecht abschneiden. Besonders schlechte OTD-Werte eines Lieferanten stechen sofort durch ein kraeftiges rot ins Auge, waehrend besonders gute OTD-Werte durch ein helles gruen auffallen. Dank der Struktur des Diagramms kann man schnell Handlungsempfehlungen ableiten. So sollte man z. B. im Februar EPD-Shipping meiden und stattdessen auf HCX-Shipping setzen. Es wuerde Sinn machen nicht nur das Jahr 2017, sondern alle 5 Jahre zu betrachten, um auf eine fundiertere Loesung zukommen. Beim lesen sollte auf die Legende geachtet werden, beispielsweise ist 0.8 das Maximum, da es der hoechste erreichbare Wert ist. Das Optimum waere jedoch der Wert 1.")
+```
+
+
+Aufgabe 2.1.) Projektbeschreibung + Stellungnahme
+Das Unternehmen X setzt sich langfristig das Ziel wettbewerbsfähiger zu werden, um ihre aktuelle Marktposition im asiatischen Raum zu gewährleisten und ihr Marktpotenzial auszuschöpfen. Insbesondere widmet sich das Unternehmen X unterschiedlichen logistischen Fragestellungen, wie die Waren besser in den Markt und an die Kunden gelangen. Im Zuge dessen hat die Data Analytics Abteilung das Projekt AnalyticsX ins Leben gerufen, um sich mit diesen Fragestellungen zu befassen und um einen Mehrwert für das Unternehmen zu schaffen. Im Projekt AnalyticsX wird mittels Data Analytics Methoden Handlungsempfehlungen ausgearbeitet, die der Geschäftsführung helfen sollen, faktenbasierte Entscheidungen zu treffen und Handlungen einzuleiten sowie durchzuführen. Die Data Analytics Abteilung untergliedert ihren Projektablauf in die folgenden sechs Schritte: 
+  
+1. Identifikation des Geschäftsproblems: Zuerst wird ein Forschungsziel gesetzt, die ein Geschäftsproblem addressieren soll, um den Umfang des AnalyticsX Projektes zu bestimmen. Da das Geschäftsproblem bereits vom Geschäftsführer identifiziert wurde, setzt sich die Data Analytics Abteilung daran die nächsten Schritte für das AnalyticsX Projekts zu konkretisieren.
+
+2. Datenbeschaffung und Datenquellen: Im zweiten Schritt erfolgt eine Datenbeschaffung durch die Anbindung an verschiedenen Datenbanken, Data Warehouses, Data Marts und Data Lakes im Unternehmen, um relevante Daten zu extrahieren. Dabei sollte darauf geachtet werden, dass es sich bei der Extrahierung um strukturierte Daten in Form von CSV-Dateien handelt. Da dies jedoch nicht immer gewährleistet werden kann, können auch unstrukturierte Daten bezogen werden. Hier ist es abzuraten Daten in Ordnern von lokalen Servern sowie Excel Dateien von Stakeholdern anzunehmen, da diese nicht auf Korrekheit überprüft werden können. 
+
+3. Datenvorbereitung und Datenexploration: Im dritten Schritt bietet es sich für die Modellierung der Daten an, dass strukturierte Daten bereits in Form von CSV-Dateien vorliegen. Falls dies nicht der Fall ist, sollten die Daten zuerst in ein gemeinsames Format überführt werden. Diese Daten werden an das RStudio Environment verknüpft. Dies setzt voraus, dass das AnalyticsX Projekt-Team bereits R und RStudio auf ihren Rechnern installiert haben. Anschließend wird eine Datenexploration durchgeführt, um eine grobe Übersicht über die vorliegenden Daten zu verschaffen. Dies hat den Zweck ein besseres Verständnis über die Daten zu gewinnen.
+
+4. Modellierung und Ausführung der Analyse: Für die Modellierung verwenden wir vergangene Daten, um die aktuelle Unternehmenssituation zu beschreiben sowie Vohersagen abzuleiten, um dann zukünftige Handlungsempfehlungen auszuarbeiten. Die Daten werden gemeinsam interpretiert und ihre Ergebnisse validiert. Wir erwarten zudem durch die Zusammenarbeit mit verschiedenen Abteilungen Rückmeldungen über fehlende Features und Verbesserungsvorschläge, die wir bei unserer Modellierung und Analysen miteinbeziehen. Dieser Prozess erfolgt iterativ, wobei Optimierungen bei der Daten Modellierung und Analysen immer wieder vorgenommen werden.
+
+5. Ergebnisbewertung und Ergebniskommunikation: Die Bewertung der Ergebnisse erfolgt durch die Entnahme von Stichproben aus den Daten, die im Detail ausgewertet werden, um Fehler oder Unregelmäßigkeiten zu identifizieren. Zudem sollten die Ergebnisse kritisch hinterfragt werden, ob das Modell die Geschäftsziele erreicht und ob die Daten genügend aussagekraft haben. Es sollten qualitative und quantitative Bewertungen vorgenommen werden, um eine sichere Aussage treffen zu können. Zum Schluss werden die Ergebnisse an wichtigen Entscheidungsträgern wie beispielsweise dem Geschäftsführer kommuniziert. Hierbei können die Ergebnisse zusammengefasst und visualisiert werden, um die Vermittlung der Ergebnisse zu vereinfachen, die aber gleichzeitig genügend aussagekraft enthalten muss. Für weitere Verbesserungen werden mehrere Feedback-Gespräche mit Geschäftsführung und verschiedenen Abteilungen benötigt. Je nach Bedarf und Ressourcen kann die Vorangehensweise und Ergebnisse durch Seminare, Trainings und Einweisungen vemittelt werden.
+
+6. Bereitstellung und Nutzengenerierung: Neben der Bereitstellung der Ergebnisse des AnalyticsX Projektes sollen zudem Code und technische Dokumentation ausreichend bereitgestellt werden, die für zukünftige Wartungsarbeiten und Weiterentwicklungen notwendig sind. Das Ergebnismodell wird in der Produktion zur Verfügung gestellt, wobei es wichtig ist, dass die Daten geschützt werden, um Manipulationen und Löschungen zu verhindern. Die Ergebnisse sollen zentral abgespeichert werden und Veränderungen an Daten sollen dokumentiert werden. Die Ergebnisse sind insbesondere für die Geschäftsführung vorgesehen, da sie anhand der umfangreichen Analyse Entscheidungen und Handlungen treffen können, die dem Unternehmen X dabei helfen soll sich auf dem asiatischen Markt besser zu positionieren. Zudem können bestimmte Abteilungen Zugang zu dem Modell erhalten, die dieses Modell für ihre Analysen gebrauchen können, um einen Mehrwert für das Unternehmen zu schaffen. 
+
+Stellungnahme zu Aufgabe 1.1: Die verkaufte Menge (Sales) des Produkts Gruppe105 in den asiatischen Regionen hat gezeigt, dass Peking mit 8,19% im Vergleich zu den anderen Regionen am umsatzschwächsten ist und Shanghai mit 14,47% am umsatzstärksten. Anhand des Datenmodells erkennen wir, dass ein Optimierungspotenzial in der Logistik in Peking besteht. Der Logistikdienstleister (LDL) „Bange+Hammer Shipping“ verzeichnet im Vergleich zu anderen LDL die höchsten Kosten für verspätete Transportdienstleistungen. Vorschläge zu Vertragsänderungen mit diesem LDL könnten vorgenommen werden, um verspätete Services und damit Kosten zu reduzieren. Zur Bewertung der Shipping-DLs wurde die On-Time Delivery (OTD) verwendet. Im Durchschnitt der letzten 5 Jahre kommt „Flying Mercury Shipping“ auf eine OTD-Rate von 38,69 %, was bedeutet, dass ca. 39 % der Lieferungen puenktlich ankommen. „IntEx Shipping“ (38,62) und „DWL Shipping“ (37,48) sind nur unwesentlich schlechter. In Zukunft sollten diese 3 Shipping-DL bevorzugt behandelt werden. Vor allem sollte „EPD Shipping“ mit einer OTD von 23,37 % gemieden werden, da dies deutlich schlechter ist als alle anderen Anbieter. Die Warehousing-DLs wurden mithilfe der Item-Fill-Rate (IFR) bewertet. Sie untersucht wie genau eine Lieferung war, gemessen an der bestellten Menge. So ist im Durchschnitt „CPS Warehousing“ mit 85,65 % der beste Warehousing-DL, was bedeutet das bei diesem Anbieter 85,65 % der Bestelltenmenge tatsächlich ankommt. Durch eine Heat-Map wird offentsichtlich, dass die Warehousing-DLs in unterschiedlichen Regionen unterschiedlich gute Arbeit leisten. In den Phillipinen ist „OPS Warehousing“ die beste Wahl ist, in Japan ist „IntEx Warehousing“ und in Peking sind „IntEx Warehousing“ oder „HCX Warehousing“ zu empfehlen. Da bei der Bewertung der Warehousing-DL 5 Jahre berücksichtigt wurden, können die Ergebnisse auch für konkrete Handlungen verwendet werden.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
