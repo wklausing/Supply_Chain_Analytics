@@ -1,0 +1,99 @@
+---
+title: "SCA_WS2021_Gruppe105_HA2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#Setup environment
+library(tidyverse)
+library("zoo")
+library("forecast")
+library("ggplot2")
+```
+
+```{r}
+cost = read.csv2("output_cost_8Players_v0010.csv")
+prices = read.csv2("output_prices_8Players_v0010.csv")
+services = read.csv2("output_services_8Players_v0010.csv")
+transactions = read.csv2("output_transactions_8Players_v0010.csv")
+```
+
+
+## Vorbereitung der Daten
+
+
+1) Aggregieren Sie die Verkaufszahlen so, dass Sie eine Tabelle mit der Nachfrage je Monat je Region bekommen (fuer alle Produkte zusammen einschliesslich Lost Sales! Sie brauchen diese Daten, um die Nachfrage in einer Region abzuschaetzen). 
+Bereinigen Sie die Daten anschliessend von unnuetzen Daten. 
+Die Daten sollten in einer neuen Variable mit dem Namen “Demand” gespeichert werden. 
+Die Spalte, welche im DF transactions noch “Sales” heisst, soll im neuen DF Demand “Demand” heissen. 
+Geben Sie nur den Tabellenkopf aus. Bewertungsrelevant: Code, Output. 
+Hinweis: Es bietet sich an, eine Variable “Periode” zu erzeugen, die aus Jahr und Monat besteht (siehe HA 1).
+```{r}
+#LONG-Format
+Demand <- aggregate(list(Sales=transactions$Sales), by=list(region=transactions$region,Month=transactions$Month), sum)
+# Sales==0 entfernen
+Demand <- data.frame(data = subset(Demand, Sales != 0))
+colnames(Demand) = c("region", "Month", "Demand")
+head(Demand)
+```
+
+2) Umwandeln von aggregierten Demand‐Daten vom Long‐Format in das Wide‐Format. 
+Im Long‐Format gibt es drei Spalten: Periode, Region und Demand. 
+Im Wide‐Format gibt es sechs Spalten: Periode, Demand in Japan, 
+Demand in Peking, Demand in Phlppn, Demand in Shangh, und Demand in Skorea. 
+Nutzen Sie dazu die Reshape()‐Funktion.  
+Geben Sie nur den Tabellenkopf aus. 
+Bewertungsrelevant: Code, Output.
+```{r}
+#LONG-Format
+Demand <- aggregate(list(Sales=transactions$Sales), 
+          by=list(region=transactions$region,Month=transactions$Month), sum)
+Demand <- data.frame(data = subset(Demand, Sales != 0))
+colnames(Demand) = c("Region", "Periode", "Demand")
+#Demand
+
+#WIDE-Format
+Demand = reshape(Demand, 
+                 idvar = "Periode",  # Spalte bleibt unveraendert
+                 timevar = "Region", # Spalte teilt sich in mehrere Spalten
+                 direction = "wide"  # Typ
+                 )
+ 
+colnames(Demand) = c("Periode", "Demand in Japan", "Demand in Peking", 
+                     "Demand in Phlppn", "Demand in Shangh", "Demand in Skorea")
+head(Demand)
+```
+
+
+3) Wandeln Sie die aggregierten Verkaufszahlen in den Datentyp time‐series mit Frequenz=12 um. 
+Jede Demand‐Spalte (jeder Vektor) soll dabei in eine Time Series umgewandelt werden. 
+Dafuer benoetigt es nur 5 Befehle. Fuer diese Aufgabe brauchen Sie nichts ausgeben. 
+Bewertungsrelevant: Code.
+```{r}
+# Datentyp umwandeln (typecast)
+ts_Month = ts(Demand, frequency = 12)
+
+# Ausgeben der Time-Series
+ts_Month
+```
+
+
+## Modellierung vorbereiten
+
+4) Fuer die exemplarische Region, visualisieren Sie den Nachfrageverlauf sinnvoll. Begruenden Sie Ihre Wahl der Visualisierung. Achten Sie auf uebersichtliche Achsenbeschriftungen. 
+Bewertungsrelevant: Output, Begruendung.
+Hinweis: Wenn Sie ggplot verwenden, kann es notwendig sein, dass Sie bei den aesthetics zusaetzlich group = 1 angeben muessen, damit Sie einen Plot sehen. Eventuelle Fehlermeldungen sind nicht bewertungsrelevant
+```{r}
+ggplot(Demand, aes(x = Periode, y = `Demand in Shangh`,ymin=0, ymax=100000, colour = "Demand Shanghai")) 
+        + geom_line()
+
+cat("Begruedung: Wir haben uns fuer einen Liniendiagramm entschieden, da es am deutlichsten den Nachfrageverlauf in Shanghai darstellt. Fuer die x-Achse haben wir die Monatsperioden zu Grunde gelegt und auf der y-Achse die Summe der Nachfrage. Aus dem Liniendiagramm wird ersichtlich, dass die Nachfrage in den letzten 12 Monaten in Shanghai tendenziell abnimmt.")
+```
+
+
+
+
+
+
