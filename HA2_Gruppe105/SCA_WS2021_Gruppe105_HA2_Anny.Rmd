@@ -7,7 +7,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 #Setup environment
-library(tidyverse)
+library("tidyverse")
 library("zoo")
 library("forecast")
 library("ggplot2")

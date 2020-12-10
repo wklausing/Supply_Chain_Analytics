@@ -391,13 +391,16 @@ transactions$Periode = "YYYY/MM"
 transactions[transactions$Month < 10,]$Periode = paste (transactions[transactions$Month < 10,]$Year, transactions[transactions$Month < 10,]$Month, sep = "/0")
 transactions[transactions$Month >= 10,]$Periode = paste (transactions[transactions$Month >= 10,]$Year, transactions[transactions$Month >= 10,]$Month, sep = "/")
 
-#Aggregieren Sales auf Region und Monat 
-demand <- transactions %>% aggregate(Sales~region+Periode, data=., sum) 
-#Umbenennen von Sales zu Demand
+#Datenbereinigung: 2021/01 entfernen, da es keine Daten enthält.
+transactions = transactions[transactions$Periode != "2021/01",]
+
+#Aggregieren Sales auf Region und Periode für Gruppe105 und Lost Sales
+demand <- transactions[transactions$Product == "Gruppe105" | transactions$Product == "Lost Sales",] %>% aggregate(Sales~region+Periode, data=., sum) 
+#Umbenennen von Sales zu Demand. region zu Region umbenennen.
 colnames(demand)[3] <- "Demand"
+colnames(demand)[1] <- "Region"
 #Tabellenkopf ausgeben
 demand %>% head()
-
 
 ```
 
@@ -407,7 +410,106 @@ Fall sechs Spalten: Periode, Demand in Japan, Demand in Peking, Demand in Phlppn
 Shangh, und Demand in Skorea.) Nutzen Sie dazu die Reshape()‐Funktion. Infos unter diesem Link (<– bitte
 anklicken). Geben Sie nur den Tabellenkopf aus. Bewertungsrelevant: Code, Output.
 ```{r}
-demand %>% reshape(., timevar = "region", idvar = "Periode", direction="wide")
+demand = reshape(demand, timevar = "Region", idvar = "Periode", direction="wide")
+colnames(demand) = c("Periode", "Demand in Japan", "Demand in Peking", "Demand in Phlppn", "Demand in Shangh", "Demand in Skorea")
+demand
+```
 
+3) Wandeln Sie die aggregierten Verkaufszahlen in den Datentyp time‐series mit Frequenz = 12 um. Jede Demand‐
+Spalte (jeder Vektor) soll dabei in eine Time Series umgewandelt werden. Dafuer benoetigt es nur 5 Befehle.
+Fuer diese Aufgabe brauchen Sie nichts ausgeben. Bewertungsrelevant: Code.
+```{r}
+demand_ts_japan = ts(demand$`Demand in Japan`, frequency = 12)
+demand_ts_peking = ts(demand$`Demand in Peking`, frequency = 12)
+demand_ts_phlppn = ts(demand$`Demand in Phlppn`, frequency = 12)
+demand_ts_shangh = ts(demand$`Demand in Shangh`, frequency = 12)
+demand_ts_skorea = ts(demand$`Demand in Skorea`, frequency = 12)
+```
+
+
+4) Fuer die exemplarische Region, visualisieren Sie den Nachfrageverlauf sinnvoll. Begruenden Sie Ihre Wahl der
+Visualisierung. Achten Sie auf uebersichtliche Achsenbeschriftungen. Bewertungsrelevant: Output, Begruendung.
+Hinweis: Wenn Sie ggplot verwenden, kann es notwendig sein, dass Sie bei den aesthetics zusaetzlich
+group = 1 angeben muessen, damit Sie einen Plot sehen. Eventuelle Fehlermeldungen sind nicht bewertungsrelevant.
+```{r}
+#Examplarische Region ist Südkorea
+demand_skorea = c("Periode", "Demand in Skorea") %>% demand[.]
+#Examp
+ggplot(demand_skorea, aes(x = Periode, y = `Demand in Skorea`)) + 
+  geom_bar(stat="identity", fill="steelblue",  width = 1, position='dodge',  linetype = 0) +
+  theme(axis.text.x = element_text(angle=90,hjust=1,vjust=1)) + 
+  xlab("Periode YYYY/MM")
+
+ggplot(demand_skorea, aes(x = Periode, y = `Demand in Skorea`, group=1)) + 
+  geom_line() +
+  theme(axis.text.x = element_text(angle=90, vjust = 0.5)) + 
+  xlab("Periode YYYY/MM")
+
+```
+
+5) Betrachten Sie die Visualisierung und nehmen Sie zu moeglichen Trends und Saisonalitaeten fuer die exemplarische
+Region Stellung. Erachten Sie eine Zeitreihenanalyse in diese Fall als sinnvolle Methode, um den
+Nachfrageverlauf zu modellieren? Angenommen, dies ist der Fall: Welche Annahme muessen sie dann treffen,
+um die Ergebnisse der Modellierung fuer Ihr Produkt nutzen zu koennen? Bewertungsrelevant: Kommentar.
+```{r}
+"Wie sehen Nachfragespikes in 2017/09, 2019/09, und 2020/09. Wieso es in 2018/09 keinen gab sollte noch untersucht werden."
+```
+
+6) Nutzen Sie nun Ihre exemplarische Region weiter. Fuehren Sie mit Hilfe der ets()‐Funktion eine Zeitreihenanalyse
+durch. Erstellen Sie ein Modell, indem Sie die automatische Festlegung der Modellparameter nutzen (model
+= “ZZZ”). Geben Sie (1) eine Zusammenfassung des Modells, (2) die urspruengliche Zeitreihe und (3) die Werte
+der Residuen aus. Bewertungsrelevant: Code, Output.
+```{r}
+
+```
+
+7) Wie weit weichen die Modellwerte durchschnittlich von den Originalwerten ab? Interpretieren Sie das Ergebnis
+im Hinblick auf die Nutzung des Modells in einem beispielhaften Unternehmensprozess. Bewertungsrelevant:
+Output, Kommentar.
+```{r}
+
+```
+
+8) Erstellen Sie eine Nachfragevorhersage fuer ein weiteres Jahr. Visualisieren Sie den Nachfrageverlauf sowie
+den Verlauf Ihres Prognosemodells in einem einzigen ggplot. Begruenden Sie die Wahl der Visualisierung. Bewertungsrelevant:
+Code, Output, Begruendung.
+```{r}
+
+```
+
+9) Bewerten Sie Ihr Modell aus Aufgabe 6 mit Hilfe von 4 verschiedenen Fehler‐Kennzahlen, die Sie aus der Uebung
+kennen. Welche der Fehler‐Kennzahlen halten Sie fuer geeignet, um die Guete des Modells zu bewerten?
+Bewertungsrelevant: Output, Kommentar.
+```{r}
+
+```
+
+10) Vergleichen Sie Ihr Modell insgesamt mit Ihren Vermutungen aus Aufgabe 5. Was stellen Sie fest? Bewertungsrelevant:
+Kommentar.
+```{r}
+
+```
+
+11) Erstellen Sie fuer die uebrigen Regionen ebenso Modelle zur Nachfragevorhersage (d.h. 4 weitere Modelle).
+Nutzen Sie erneut die automatische Festlegung der Modellparameter (model = "ZZZ"). Berechnen Sie zudem
+fuer jedes Modell den MAPE, um den Vergleich der Modelle zu ermoeglichen. Nehmen Sie dazu Stellung,
+welches Modell laut der bewertenden Information das “beste” der vier Modelle sei. Bewertungsrelevant: Output,
+Kommentar.
+```{r}
+
+```
+
+12) Ihre Chefin kommt bei einer Firmenfeier auf Sie zu und schlaegt Ihnen eine Wette vor. Sie sagt: “Ich wette mit
+Ihnen um 100 Euro, dass die Nachfrage nach Limonade in Peking, den Philippinen und Suedkorea im naechsten
+Monat (Januar 2021) in Summe 45.000 Flaschen nicht uebersteigen wird.” Sollten Sie diese Wette eingehen?
+Bewertungsrelevant: Output, Kommentar.
+```{r}
+
+```
+
+13) Ihr guter Freund Olaf wohnt in Shanghai und besitzt dort drei der Supermaerkte, die Ihre Limonaden‐Marke
+fuehren. Er wuerde gern wissen, wie viel Limonade er im ersten Quartal von 2021 wahrscheinlich bestellen
+muss. Helfen Sie Olaf. Bewertungsrelevant: Output, Kommentar.
+```{r}
 
 ```
