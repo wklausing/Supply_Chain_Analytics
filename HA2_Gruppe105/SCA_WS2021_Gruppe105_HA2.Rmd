@@ -43,7 +43,9 @@ Code, Output.
 ```{r}
 #Variable Periode erzeugen.YYYY/MM
 transactions$Periode = "YYYY/MM"
-transactions[transactions$Month < 10,]$Periode = paste (transactions[transactions$Month < 10,]$Year, transactions[transactions$Month < 10,]$Month, sep = "/0")
+#Füge 0 hinzu falls Monat kleiner 10 ist. 
+transactions[transactions$Month < 10,]$Periode = paste (transactions[transactions$Month < 10,]$Year, transactions[transactions$Month < 10,]$Month, sep = "/0") 
+#Bei Monat größer gleich 10 muss keine 0 hinzugefügt werden.
 transactions[transactions$Month >= 10,]$Periode = paste (transactions[transactions$Month >= 10,]$Year, transactions[transactions$Month >= 10,]$Month, sep = "/")
 
 #Datenbereinigung: Transaktionen mit Sales < 0 interessieren uns nicht. Zusätzlich enternen wir Duplikate. Viele Transaktionen kommen doppelt vor, vorallem Lost Sales ist auffällig.
