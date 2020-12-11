@@ -173,13 +173,95 @@ Output, Kommentar.
 "Kommentar: Die Modellwerte weichen im durchschnitt um ca. 2.66 Einheiten von den Originalwerten ab. Wen diese Modell beim bestimmen der Bestellmenge verwendet wird, werden vorraussichtlich ca. 3 Einheiten zu wenig bestellt. Dabei sollte berücksichtigt werden, das dies ein Durchschnitt ist, was bedeutet, das mal zu viel, mal zu wenig bestellt wird."
 ```
 
-8) Erstellen Sie eine Nachfragevorhersage fuer ein weiteres Jahr. Visualisieren Sie den Nachfrageverlauf sowie
-den Verlauf Ihres Prognosemodells in einem einzigen ggplot. Begruenden Sie die Wahl der Visualisierung. Bewertungsrelevant:
-Code, Output, Begruendung.
+8) Erstellen Sie eine Nachfragevorhersage fuer ein weiteres Jahr. 
+Visualisieren Sie den Nachfrageverlauf sowie den Verlauf Ihres Prognosemodells 
+in einem einzigen ggplot. Begruenden Sie die Wahl der Visualisierung. 
+Bewertungsrelevant: Code, Output, Begruendung.
 ```{r}
- #Vorher haben wir Zeitreihenanalyse gemacht. Jetzt Vorhersage machen und mit dem letzten Jahr in einem Plot verlgeichen. 
+# Forecast der Variable fcast_Shangh (forecast fuer exponentielle Glaettung) uebergeben
+fcast_Shangh = forecast(m_Shangh, 12)
+
+# forecast ausgeben (anzeigen)
+fcast_Shangh
+```
+
+*Alternative 2*
+*Schritt 1 - DataFrame Original Nr. 1 erstellen*
+```{r}
+# DataFrame erstellen
+  df_Shangh_orig = data.frame(
+    period = seq(1, length(fcast_Shangh$x), 1), 
+    value = as.numeric(fcast_Shangh$x), 
+    grp = rep("original", length(fcast_Shangh$x)))
+  
+  # Anzeigen des DataFrame 
+  df_Shangh_orig
+```
+*Schritt 2 - DataFrame Vorhersage Nr. 2 erstellen*
+(1) `Perioden`-Variable von 1 bis Laenge des Zeitreihe, einer 
+(2) `Value`-Variable mit den Werten der Zeitreihe des Forecasts sowie einer 
+(3) `grp`-Variable mit festem Wert *fcast*, welche fuer die Gruppierung genutzt wird.
+```{r}
+# DataFrame erstellen
+df_Shangh_fcast = data.frame(
+  period = seq(1, length(fcast_Shangh$fitted) + length(fcast_Shangh$mean), 1), 
+  value = c(as.numeric(fcast_Shangh$fitted), as.numeric(fcast_Shangh$mean)), 
+  grp = rep("fcast", length(fcast_Shangh$fitted) + length(fcast_Shangh$mean)))
+
+# Anzeigen des DataFrame (nur Kopf)
+df_Shangh_fcast
+```
+
+*Schritt 3 - Verbinden der DataFrames Nr. 1 und Nr. 2*
+```{r}
+# Verbinden der Data Frames
+df_EG = rbind(df_Shangh_orig, df_Shangh_fcast)
+
+# Anzeigen des DataFrame (ausgewaehlte Beobachtungen)
+df_EG
+```
+*Schritt 4 - Visualisierung*
+```{r}
+# Beachte: der ggplot() Befehl ist deutlich kuerzer aufgrund der vorherigen Integration der Daten in ein 
+# Data Frame
+ggplot(data = df_EG, aes(x = period, 
+                         y = value, ymin = 0, ymax = 110000, colour = grp)) + 
+  geom_line()
+```
 
 
+*Alternative 1*
+```{r}
+# Forecast der Variable fcast_Shangh (forecast fuer exponentielle Glaettung) uebergeben
+fcast_Shangh = forecast(m_Shangh, 24)
+
+# forecast ausgeben (anzeigen)
+fcast_Shangh
+
+
+# Hintergrund erzeugen (ohne Daten!)
+ggplot(data = NULL, aes(ymin = 0, ymax = 110000)) + 
+  
+  # Erste Linie Vorhersage (keine Daten; 
+  # X-Achse = Reihe von 1 bis laenge fitting Werten und Forecast Werten)
+  geom_line(data = NULL,  aes(
+    x = seq(1, length(c(fcast_Shangh$fitted, fcast_Shangh$mean)), 1), 
+                            
+    #Y-Achse = Kombination von fitting Werten und Forecast Werten
+    y = c(as.numeric(fcast_Shangh$fitted), as.numeric(fcast_Shangh$mean)),        
+      # Beschriftung fuer Farbe festlegen
+       colour = 'forecast'))  +                          
+  
+  # Zweite Linie Ursprung-Zeitreihe 
+  # (Keine Daten; X-Achse = Reihe von 1 bis laenge Beobachtungen)
+  # Y-Achse = Beobachtungen
+  # Beschriftung fuer Farbe festlegen
+  geom_line(data = NULL, aes(x = seq(1, length(fcast_Shangh$x), 1), 
+                             y = as.numeric(fcast_Shangh$x),                    
+                             colour = 'original')) +                            
+  
+  # Farben fuer Beschriftungen festlegen
+  scale_colour_manual(breaks = c("forecast", "original"), values = c("red", "blue"))
 ```
 
 9) Bewerten Sie Ihr Modell aus Aufgabe 6 mit Hilfe von 4 verschiedenen Fehler‐Kennzahlen, die Sie aus der Uebung
