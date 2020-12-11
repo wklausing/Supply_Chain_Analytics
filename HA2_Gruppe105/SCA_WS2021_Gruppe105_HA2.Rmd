@@ -178,8 +178,6 @@ Output, Kommentar.
 
 
 
-
-
 *ZU BEARBEITEN*
 *JAHR UND MIONAT AUF DER X-ACHSE FEHLEN*
 8) Erstellen Sie eine Nachfragevorhersage fuer ein weiteres Jahr. 
