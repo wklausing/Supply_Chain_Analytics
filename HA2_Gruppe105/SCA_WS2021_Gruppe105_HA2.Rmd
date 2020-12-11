@@ -95,6 +95,7 @@ demand_shangh = c("Periode", "Demand in Shangh") %>% demand[.]
 #Liniendiagramm für die gesamte Zeitspanne.
 ggplot(demand_shangh, aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
   geom_line() +
+  # Beschriftung von x-Achse 90 Grad umgedreht
   theme(axis.text.x = element_text(angle=90, vjust = 0.5)) + 
   xlab("Periode YYYY/MM") + 
   ylim(14000, 21500)
