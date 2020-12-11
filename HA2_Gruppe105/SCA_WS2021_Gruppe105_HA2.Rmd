@@ -176,25 +176,6 @@ Code, Output, Begruendung.
 ```{r}
  #Vorher haben wir Zeitreihenanalyse gemacht. Jetzt Vorhersage machen und mit dem letzten Jahr in einem Plot verlgeichen. 
 
-# Hintergrund erzeugen (ohne Daten!)
-ggplot(data = NULL, aes(ymin = 2000, ymax = 3250)) +
-  
-  # Erste Linie hinzufuegen (keine Daten; X-Achse = Reihe von 1 bis laenge fitting Werten und Forecast Werten)
-  geom_line(data = NULL, aes(x = ets_shangh$x,
-                             # Y-Achse = Kombination von fitting Werten und Forecast Werten
-                             y = c(as.numeric(fcast_Tr$fitted), as.numeric(fcast_Tr$mean)), 
-                             # Beschriftung fuer Farbe festlegen
-                             colour = 'forecast')) +
-  
-  # Zweite Linie hinzufuegen (Keine Daten; X-Achse = Reihe von 1 bis laenge Beobachtungen)
-  geom_line(data = NULL, aes(x = seq(1,length(fcast_Tr$x),1), 
-                             # Y-Achse = Beobachtungen
-                             y = as.numeric(fcast_Tr$x),
-                             # Beschriftung fuer Farbe festlegen
-                             colour = 'original')) +
-  
-  # Farben fuer Beschriftungen festlegen
-  scale_colour_manual(breaks = c("forecast", "original"), values = c("red", "blue"))
 
 ```
 
@@ -205,11 +186,11 @@ Bewertungsrelevant: Output, Kommentar.
 # MFE
 (ets_shangh$x - ets_shangh$fitted) %>% as.numeric(.) %>% mean(.)
 # MAE
-(fcast_Tr$x - fcast_Tr$fitted) %>% as.numeric(.) %>% abs(.)  %>% mean(.)
+(ets_shangh$x - ets_shangh$fitted) %>% as.numeric(.) %>% abs(.)  %>% mean(.)
 # MSE
-(fcast_Tr$x - fcast_Tr$fitted)^2 %>% as.numeric(.) %>% mean(.)
+(ets_shangh$x - ets_shangh$fitted)^2 %>% as.numeric(.) %>% mean(.)
 # MAPE
-(((fcast_Tr$x - fcast_Tr$fitted)/ as.numeric(fcast_Tr$x)) * 100) %>% as.numeric(.) %>% abs(.)  %>% mean(.)
+(((ets_shangh$x - ets_shangh$fitted)/ as.numeric(ets_shangh$x)) * 100) %>% as.numeric(.) %>% abs(.)  %>% mean(.)
 ```
 
 10) Vergleichen Sie Ihr Modell insgesamt mit Ihren Vermutungen aus Aufgabe 5. Was stellen Sie fest? Bewertungsrelevant:
