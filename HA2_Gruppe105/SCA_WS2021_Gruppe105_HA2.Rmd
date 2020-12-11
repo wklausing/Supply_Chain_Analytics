@@ -49,10 +49,12 @@ transactions[transactions$Month >= 10,]$Periode = paste (transactions[transactio
 transactions = transactions[transactions$Sales > 0,] %>% unique(.)
 
 #Tabelle mit der Nachfrage je Monat je Region: Aggregieren Sales auf Region und Periode für Gruppe105 und Lost Sales
-demand <- transactions[transactions$Product == "Gruppe105" | transactions$Product == "Lost Sales",] %>% aggregate(Sales~region+Periode, data=., sum) 
+demand <- transactions[transactions$Product == "Lost Sales",] %>% aggregate(Sales~region+Periode, data=., sum) 
+
 #Umbenennen von Sales zu Demand. region zu Region umbenennen.
 colnames(demand)[3] <- "Demand"
 colnames(demand)[1] <- "Region"
+
 #Tabellenkopf ausgeben
 demand %>% head()
 
