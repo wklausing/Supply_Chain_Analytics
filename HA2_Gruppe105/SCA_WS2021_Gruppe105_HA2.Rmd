@@ -17,6 +17,7 @@ library(data.table)
 
 library("zoo")
 library("forecast")
+## Kommentar von Anny
 ```
 
 ## R Markdown
@@ -29,6 +30,8 @@ cost = read.csv2("output_cost_8Players_v0010.csv")
 prices = read.csv2("output_prices_8Players_v0010.csv")
 services = read.csv2("output_services_8Players_v0010.csv")
 transactions = read.csv2("output_transactions_8Players_v0010.csv")
+
+
 ```
 
 1) Aggregieren Sie die Verkaufszahlen so, dass Sie eine Tabelle mit der Nachfrage je Monat je Region bekommen
@@ -46,15 +49,13 @@ transactions[transactions$Month < 10,]$Periode = paste (transactions[transaction
 transactions[transactions$Month >= 10,]$Periode = paste (transactions[transactions$Month >= 10,]$Year, transactions[transactions$Month >= 10,]$Month, sep = "/")
 
 #Datenbereinigung: Transaktionen mit Sales < 0 interessieren uns nicht. Zusätzlich enternen wir Duplikate. Viele Transaktionen kommen doppelt vor, vorallem Lost Sales ist auffällig.
-transactions = transactions[transactions$Sales > 0,] %>% unique(.)
+transactions = transactions[transactions$Sales > 0,]
 
 #Tabelle mit der Nachfrage je Monat je Region: Aggregieren Sales auf Region und Periode für Gruppe105 und Lost Sales
-demand <- transactions[transactions$Product == "Lost Sales",] %>% aggregate(Sales~region+Periode, data=., sum) 
-
+demand <- transactions %>% aggregate(Sales~region+Periode, data=., sum) 
 #Umbenennen von Sales zu Demand. region zu Region umbenennen.
 colnames(demand)[3] <- "Demand"
 colnames(demand)[1] <- "Region"
-
 #Tabellenkopf ausgeben
 demand %>% head()
 
@@ -68,7 +69,7 @@ anklicken). Geben Sie nur den Tabellenkopf aus. Bewertungsrelevant: Code, Output
 ```{r}
 demand = reshape(demand, timevar = "Region", idvar = "Periode", direction="wide")
 colnames(demand) = c("Periode", "Demand in Japan", "Demand in Peking", "Demand in Phlppn", "Demand in Shangh", "Demand in Skorea")
-demand
+head(demand)
 ```
 
 3) Wandeln Sie die aggregierten Verkaufszahlen in den Datentyp time‐series mit Frequenz = 12 um. Jede Demand‐
@@ -97,38 +98,38 @@ ggplot(demand_shangh, aes(x = Periode, y = `Demand in Shangh`, group=1)) +
   # Beschriftung von x-Achse 90 Grad umgedreht
   theme(axis.text.x = element_text(angle=90, vjust = 0.5)) + 
   xlab("Periode YYYY/MM") + 
-  ylim(2000, 3250)
+  ylim(12500, 125000)
 
 #Liniendiagramme für jedes Jahr zur genaueren Betrachtung.
 ggplot(demand_shangh[demand_shangh$Periode %like% "2016",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
   geom_line() +
   theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
   xlab("Periode YYYY/MM") + 
-  ylim(2000, 3250)
+  ylim(12500, 125000)
 
 ggplot(demand_shangh[demand_shangh$Periode %like% "2017",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
   geom_line() +
   theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
   xlab("Periode YYYY/MM") + 
-  ylim(2000, 3250)
+  ylim(12500, 125000)
 
 ggplot(demand_shangh[demand_shangh$Periode %like% "2018",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
   geom_line() +
   theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
   xlab("Periode YYYY/MM") + 
-  ylim(2000, 3250)
+  ylim(12500, 125000)
 
 ggplot(demand_shangh[demand_shangh$Periode %like% "2019",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
   geom_line() +
   theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
   xlab("Periode YYYY/MM") + 
-  ylim(2000, 3250)
+  ylim(12500, 125000)
 
 ggplot(demand_shangh[demand_shangh$Periode %like% "2020",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
   geom_line() +
   theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
   xlab("Periode YYYY/MM") + 
-  ylim(2000, 3250)
+  ylim(12500, 125000)
 
 #TODO X Achse in Quartale aufteilen.
 
