@@ -49,7 +49,7 @@ transactions[transactions$Month < 10,]$Periode = paste (transactions[transaction
 transactions[transactions$Month >= 10,]$Periode = paste (transactions[transactions$Month >= 10,]$Year, transactions[transactions$Month >= 10,]$Month, sep = "/")
 
 #Datenbereinigung: Transaktionen mit Sales < 0 interessieren uns nicht. Zusätzlich enternen wir Duplikate. Viele Transaktionen kommen doppelt vor, vorallem Lost Sales ist auffällig.
-transactions = transactions[transactions$Sales > 0,]
+transactions = transactions[transactions$Sales > 0,] %>% unique(.)
 
 #Tabelle mit der Nachfrage je Monat je Region: Aggregieren Sales auf Region und Periode für Gruppe105 und Lost Sales
 demand <- transactions %>% aggregate(Sales~region+Periode, data=., sum) 
@@ -97,38 +97,38 @@ ggplot(demand_shangh, aes(x = Periode, y = `Demand in Shangh`, group=1)) +
   geom_line() +
   theme(axis.text.x = element_text(angle=90, vjust = 0.5)) + 
   xlab("Periode YYYY/MM") + 
-  ylim(12500, 125000)
+  ylim(14000, 21500)
 
 #Liniendiagramme für jedes Jahr zur genaueren Betrachtung.
 ggplot(demand_shangh[demand_shangh$Periode %like% "2016",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
   geom_line() +
   theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
   xlab("Periode YYYY/MM") + 
-  ylim(12500, 125000)
+  ylim(14000, 21500)
 
 ggplot(demand_shangh[demand_shangh$Periode %like% "2017",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
   geom_line() +
   theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
   xlab("Periode YYYY/MM") + 
-  ylim(12500, 125000)
+  ylim(14000, 21500)
 
 ggplot(demand_shangh[demand_shangh$Periode %like% "2018",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
   geom_line() +
   theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
   xlab("Periode YYYY/MM") + 
-  ylim(12500, 125000)
+  ylim(14000, 21500)
 
 ggplot(demand_shangh[demand_shangh$Periode %like% "2019",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
   geom_line() +
   theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
   xlab("Periode YYYY/MM") + 
-  ylim(12500, 125000)
+  ylim(14000, 21500)
 
 ggplot(demand_shangh[demand_shangh$Periode %like% "2020",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
   geom_line() +
   theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
   xlab("Periode YYYY/MM") + 
-  ylim(12500, 125000)
+  ylim(14000, 21500)
 
 #TODO X Achse in Quartale aufteilen.
 
