@@ -243,6 +243,7 @@ ggplot(data = df_EG, aes(x = period,
 
 
 *Alternative 1*
+*YYYY/MM fehlt!*
 ```{r}
 # Forecast der Variable fcast_Shangh (forecast fuer exponentielle Glaettung) uebergeben
 fcast_Shangh = forecast(m_Shangh, 24)
@@ -391,27 +392,59 @@ cat("Modell für Südkorea hat einen Wert für MAPE von", mape(demand_ts_skorea,
 Ihnen um 100 Euro, dass die Nachfrage nach Limonade in Peking, den Philippinen und Suedkorea im naechsten
 Monat (Januar 2021) in Summe 45.000 Flaschen nicht uebersteigen wird.” Sollten Sie diese Wette eingehen?
 Bewertungsrelevant: Output, Kommentar.
-*ZU BEARBEITEN*
+*SPALTE UMBENENNEN*
 ```{r}
-#Summe von Sales für Peking, Philippinen und Südkorea.
-transactions[transactions$Periode %like% "/01" & transactions$region!="Shangh",]$Sales %>% sum()
+fcast_Peking = data.frame(forecast(ets_peking, 12))
+fcast_Philippinen = data.frame(forecast(ets_phlppn, 12))
+fcast_Suedkorea = data.frame(forecast(ets_skorea, 12))
 
+# Dataframe kombinieren und Summe von Sales für Peking, Philippinen und Südkorea
+SumRegion <- rbind(fcast_Peking + fcast_Philippinen + fcast_Suedkorea)
 
-# Summe von Sales für Peking, Philippinen und Südkorea.
-# konfidenzintervalle rein 
-# Der String gibt alle Januar 01 Monate aus
-transactions[transactions$Periode %like% "/01" & 
-               
-               transactions$region=="Peking",]$Sales %>% sum() # Laender noch mitrein
-
-# forecast funktion fehlt
-
+# Tabellenkopf erste Zeile bzw. Januar 2021 von forecast ausgeben
+head(SumRegion, 1)
 ```
+
+
 
 13) Ihr guter Freund Olaf wohnt in Shanghai und besitzt dort drei der Supermaerkte, die Ihre Limonaden‐Marke
 fuehren. Er wuerde gern wissen, wie viel Limonade er im ersten Quartal von 2021 wahrscheinlich bestellen
 muss. Helfen Sie Olaf. Bewertungsrelevant: Output, Kommentar.
-*ZU BEARBEITEN*
+*SPALTE UMBENENNEN*
 ```{r}
-# nur Gruppe105
+# (1) Datenbereinigen: Nur Produkt der Gruppe105 in der Region Shanghai 
+DemandShanghai = subset(transactions, Product == "Gruppe105" & 
+                                      region=="Shangh" &
+                                      Sales > 0)
+DemandShanghai <- unique(DemandShanghai)
+
+# (2) Aggregieren
+DemandShanghai = aggregate(Sales ~ Periode, data = DemandShanghai, sum)
+
+# (3) Erstellen der Zeitreihe
+ts_Shanghai = ts(DemandShanghai$Sales, frequency = 12)
+
+# (4) Modell erstellen
+m1_Shanghai = ets(ts_Shanghai, model="ZZZ")
+
+# Die Vorhersage Nachfrage bezieht sich auf 5 Gescheafte. 
+fcast1_Shanghai = data.frame(forecast(m1_Shanghai, 12))
+
+# Da Olaf nur 3 Geschaefte hat muessen wir die Anzahl anpassen und runden
+fcast1_Shanghai <- round((fcast1_Shanghai[1]/5)*3,2)
+
+# Spaltennam aendern
+colnames(fcast1_Shanghai) = c("Demand Forecast")
+
+# 3 Monate bzw. ein Quartal anzeigen
+head(fcast1_Shanghai, 3)[1]
+
+# dividert durch drei, da fuer jedes supermarkt
 ```
+Kommentar zu Aufgabe 13: Anhand unseres Vorhersagemodells basierend auf den
+Vergangenheitsdaten der Nachfrage in Shanghai empfehlen wir unseren Freund Olaf 
+im ersten Quartal in Januar 1681 Limonaden-Flaschen zu kaufen sowie im Februar 
+1699 und im Maerz 1510 Limonaden-Flaschen. Hier gilt es insbesondere zu 
+beruecksichtigen, dass die alte Vorhersage alle fuenf Geschaefte und ihre Nach-
+fragemenge umfasse, daher haben wir die Anzahl der Nachfrage auf die Anzahl
+der drei Supermaerkte reduziert, die Olaf besitzt.
