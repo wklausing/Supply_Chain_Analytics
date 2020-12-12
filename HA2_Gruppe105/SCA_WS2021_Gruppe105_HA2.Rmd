@@ -51,7 +51,7 @@ transactions[transactions$Month >= 10,]$Periode = paste (transactions[transactio
 transactions = transactions[transactions$Sales > 0,] %>% unique(.)
 
 #Tabelle mit der Nachfrage je Monat je Region: Aggregieren Sales auf Region und Periode für Gruppe105 und Lost Sales
-demand <- transactions[transactions$Product == "Lost Sales",] %>% aggregate(Sales~region+Periode, data=., sum) 
+demand <- transactions %>% aggregate(Sales~region+Periode, data=., sum) 
 
 #Umbenennen von Sales zu Demand. region zu Region umbenennen.
 colnames(demand)[3] <- "Demand"
@@ -100,39 +100,33 @@ ggplot(demand_shangh, aes(x = Periode, y = `Demand in Shangh`, group=1)) +
   geom_line() +
   # Beschriftung von x-Achse 90 Grad umgedreht
   theme(axis.text.x = element_text(angle=90, vjust = 0.5)) + 
-  xlab("Periode YYYY/MM") + 
-  ylim(2000, 3250)
+  xlab("Periode YYYY/MM")
 
 #Liniendiagramme für jedes Jahr zur genaueren Betrachtung.
 ggplot(demand_shangh[demand_shangh$Periode %like% "2016",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
   geom_line() +
   theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
-  xlab("Periode YYYY/MM") + 
-  ylim(2000, 3250)
+  xlab("Periode YYYY/MM")
 
 ggplot(demand_shangh[demand_shangh$Periode %like% "2017",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
   geom_line() +
   theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
-  xlab("Periode YYYY/MM") + 
-  ylim(2000, 3250)
+  xlab("Periode YYYY/MM")
 
 ggplot(demand_shangh[demand_shangh$Periode %like% "2018",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
   geom_line() +
   theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
-  xlab("Periode YYYY/MM") + 
-  ylim(2000, 3250)
+  xlab("Periode YYYY/MM")
 
 ggplot(demand_shangh[demand_shangh$Periode %like% "2019",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
   geom_line() +
   theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
-  xlab("Periode YYYY/MM") + 
-  ylim(2000, 3250)
+  xlab("Periode YYYY/MM")
 
 ggplot(demand_shangh[demand_shangh$Periode %like% "2020",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
   geom_line() +
   theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
-  xlab("Periode YYYY/MM") + 
-  ylim(2000, 3250)
+  xlab("Periode YYYY/MM")
 
 #TODO X Achse in Quartale aufteilen.
 
@@ -186,7 +180,7 @@ in einem einzigen ggplot. Begruenden Sie die Wahl der Visualisierung.
 Bewertungsrelevant: Code, Output, Begruendung.
 ```{r}
 # Forecast der Variable fcast_Shangh (forecast fuer exponentielle Glaettung) uebergeben
-fcast_Shangh = forecast(m_Shangh, 12)
+fcast_Shangh = forecast(ets_shangh$x, 12)
 
 # forecast ausgeben (anzeigen)
 fcast_Shangh
@@ -246,7 +240,7 @@ ggplot(data = df_EG, aes(x = period,
 *YYYY/MM fehlt!*
 ```{r}
 # Forecast der Variable fcast_Shangh (forecast fuer exponentielle Glaettung) uebergeben
-fcast_Shangh = forecast(m_Shangh, 24)
+fcast_Shangh = forecast(ets_shangh$x, 24)
 
 # forecast ausgeben (anzeigen)
 fcast_Shangh
