@@ -404,9 +404,8 @@ head(SumRegion, 1)
 13) Ihr guter Freund Olaf wohnt in Shanghai und besitzt dort drei der Supermaerkte, die Ihre Limonaden‐Marke
 fuehren. Er wuerde gern wissen, wie viel Limonade er im ersten Quartal von 2021 wahrscheinlich bestellen
 muss. Helfen Sie Olaf. Bewertungsrelevant: Output, Kommentar.
-*SPALTE UMBENENNEN*
 ```{r}
-# (1) Datenbereinigen: Nur Produkt der Gruppe105 in der Region Shanghai 
+# (1) Datenbereinigen: Nur Produkt Gruppe105 in der Region Shanghai 
 DemandShanghai = subset(transactions, Product == "Gruppe105" & 
                                       region=="Shangh" &
                                       Sales > 0)
@@ -424,16 +423,16 @@ m1_Shanghai = ets(ts_Shanghai, model="ZZZ")
 # Die Vorhersage Nachfrage bezieht sich auf 5 Gescheafte. 
 fcast1_Shanghai = data.frame(forecast(m1_Shanghai, 12))
 
-# Da Olaf nur 3 Geschaefte hat muessen wir die Anzahl anpassen und runden
+# Da Olaf nur 3 Geschaefte hat, muessen wir die Anzahl anpassen und runden
 fcast1_Shanghai <- round((fcast1_Shanghai[1]/5)*3,2)
 
-# Spaltennam aendern
-colnames(fcast1_Shanghai) = c("Demand Forecast")
+# Spaltenname aendern
+colnames(fcast1_Shanghai) = c("Demand Forecast Q1")
 
 # 3 Monate bzw. ein Quartal anzeigen
 head(fcast1_Shanghai, 3)[1]
 
-# dividert durch drei, da fuer jedes supermarkt
+#TODO Periode anpassen
 ```
 Kommentar zu Aufgabe 13: Anhand unseres Vorhersagemodells basierend auf den
 Vergangenheitsdaten der Nachfrage in Shanghai empfehlen wir unseren Freund Olaf 
