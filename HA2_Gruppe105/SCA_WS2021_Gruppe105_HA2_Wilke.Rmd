@@ -111,7 +111,8 @@ Bewertungsrelevant: Output, Begruendung.
 ```
 *Begruendung zu Aufgabe 4*
 Wir haben uns fuer einen Liniendiagramm entschieden, da es am deutlichsten den 
-Nachfrageverlauf in Shanghai darstellt. 
+Nachfrageverlauf in Shanghai darstellt. Besonders der Auf- und Abstieg wird gut
+dargestellt.
 Fuer die x-Achse haben wir die Periode von Anfang 2016 bis Ende 2020 zu Grunde 
 gelegt. Auf der y-Achse haben wie die Nachfrage von 12500 bis 21500 eingegrenzt,
 um den Nachfrageverlauf besser zu verdeutlichen. Das Liniendiagramm zu waehlen 
@@ -458,17 +459,18 @@ fcast1_Shanghai <- round((fcast1_Shanghai[1]/5)*3,2)
 # Spaltenname aendern
 colnames(fcast1_Shanghai) = c("Demand Forecast Q1")
 
+# Zeilennamen in richtem Perioden YYYY-MM Format hinzufügen
+rownames(fcast1_Shanghai) = Demand$Periode[Demand$Periode %like% "2020"] %>% gsub("2020", "2021", .)
+
 # 3 Monate bzw. ein Quartal anzeigen
 head(fcast1_Shanghai, 3)
 
-#TODO Periode anpassen und Konfidenzintervall
-#TODO Kommentar schreiben
-#TODO Generischen Satz über Liniendiagramm fixen
+#TODO Konfidenzintervall
 ```
 Kommentar zu Aufgabe 13: Anhand unseres Vorhersagemodells basierend auf den
 Vergangenheitsdaten der Nachfrage in Shanghai empfehlen wir unseren Freund Olaf 
 im ersten Quartal in Januar 1681 Limonaden-Flaschen zu kaufen sowie im Februar 
-1699 und im Maerz 1510 Limonaden-Flaschen. Hier gilt es insbesondere zu 
+1699 und im Maerz 1511 Limonaden-Flaschen. Hier gilt es insbesondere zu 
 beruecksichtigen, dass die alte Vorhersage alle fuenf Geschaefte und ihre Nach-
 fragemenge umfasse, daher haben wir die Anzahl der Nachfrage auf die Anzahl
 der drei Supermaerkte reduziert, die Olaf besitzt.
