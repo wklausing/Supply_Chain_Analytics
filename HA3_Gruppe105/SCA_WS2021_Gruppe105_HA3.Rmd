@@ -1,0 +1,130 @@
+---
+title: "SCA_WS2021_Gruppe105_HA3"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Datenanalyse
+
+```{r}
+#library("tidyverse")
+library("dummies")
+library("ggplot2")
+library("Metrics")
+```
+
+
+```{r cars}
+externals = read.csv2("externals10.csv")
+services = read.csv2("output_services_8Players_v0010.csv")
+externals
+services
+```
+
+*service: Die erbrachte Logistikdienstleistung*
+*• DaysScheduled: Die Anzahl an Tagen, die diese Leistung in Anspruch nehmen sollte*
+*• DaysExecuted: Die Anzahl an Tagen, die diese Leistung tatsaechlich in Anspruch genommen hat*
+*• QScheduled: Die Menge, die bei der Leistung abgefertigt werden sollte*
+*• QExecuted: Die Menge, die bei der Leistung tatsaechlich abgefertigt wurde*
+*• cost: Die Kosten der Leistung*
+
+
+## Daten fuer die Modellierung vorbereiten
+
+### Aufgabe 1: OTD und IFR nach berechnen
+```{r}
+# Variable Periode (YYYYMM) erstellen
+services$Periode <- data.frame(sprintf("%02d%02d", services$Year, services$Month))
+colnames(services$Periode) <- c("JahrMonat")
+
+
+# OTD als 0 (unpuenktlich) oder 1 (puenktlich) markieren
+services$OTDstatus <- data.frame(with(services, ifelse((DaysExecuted <= DaysScheduled), 1, 0)))
+colnames(services$OTDstatus) <- c("1")
+
+# IFR als 0 (unpuenktlich) oder 1 (puenktlich) markieren
+services$IFRstatus <- data.frame(with(services, ifelse((QScheduled <= QExecuted), 1, 0)))
+colnames(services$IFRstatus) <- c("1")
+
+
+# OTD einzelnd pro Service Zeile berechnen
+services$OTD = services$DaysExecuted / services$DaysScheduled
+# Aggregieren und Durchschnitt der OTD-Rate nach Lieferant berechnen
+OTD = data.frame(aggregate(OTD ~ vendor, data = services, mean))
+OTD
+
+# IFR einzelnd pro Service Zeile berechnen
+services$IFR = services$QExecuted / services$QScheduled
+# Aggregieren durchschnittlicher IFR-Rate
+IFR = data.frame(aggregate(IFR ~ vendor, data = services, mean))
+# IFR auf die 2. Nachkommastelle runden
+services[18] = round(services$IFR, 2)
+IFR
+
+# Datenbereinigen aller NaN-Werte in Spalte OTD von Tabelle "services" 
+services$OTD[is.nan(services$OTD)]<-0
+```
+
+
+### Aufgabe 2: Warehousing-DL fuer 2020/12 in Japan
+```{r}
+# IFR einzelnd pro Service Zeile berechnen
+services$IFR = services$QExecuted / services$QScheduled
+
+# Aggregieren durchschnittlicher IFR-Rate nach Warehousing-DL in Japan
+df1 = data.frame(aggregate(IFR ~ vendor + region,
+                           data = subset(services,
+                                  region =="Japan" &
+                                  service == "Warehousing" &
+                                  Periode == "202012"), mean))
+# Periode 2020-12 kennzeichnen
+df1$Periode = c("2020-12")
+
+# IFR auf die 2. Nachkommastelle runden
+df1[3] = round(df1$IFR, 2)
+df1
+```
+*Notiz: In Periode 2020/12 ist das IFR hoeher als die Betrachtung aller Jahre*
+
+
+
+### Aufgabe 3: OTDjeShipping‐Logistikdienstleister
+```{r}
+# OTD einzelnd pro Service Zeile berechnen
+services$OTD = services$DaysExecuted / services$DaysScheduled
+
+
+# Aggregieren durchschnittlicher IFR-Rate nach Warehousing-DL in Japan
+df2 = data.frame(aggregate(OTD ~ vendor + region,
+                           data = subset(services,
+                                  region =="Japan" &
+                                  service == "Shipping" &
+                                  Periode == "202012"), mean))
+# Periode 2020-12 kennzeichnen
+df2$Periode = c("2020-12")
+
+# IFR auf die 2. Nachkommastelle runden
+df2[3] = round(df2$OTD, 2)
+df2
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
