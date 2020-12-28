@@ -49,8 +49,10 @@ wdl = services[services$service == "Warehousing",] %>% aggregate(IFR ~ vendor+re
 # Nur Japan und Periode 2020/12
 wdl_japan_202012 = wdl[wdl$region == "Japan" & wdl$Periode == "202012",]
 
-# Darstellung 
+# Darstellung
 wdl_japan_202012[order(-wdl_japan_202012$IFR),]
+
+#TODO IFR runden auf vierte Stelle
 ```
 
 3) Erzeugen Sie ein neues Dataframe, welches die aggregierte OTD je Shipping‐Logistikdienstleister enthaelt. Die OTD soll je LDL (nur Shipping), Region und Periode (eine Periode = ein Monat eines einzelnen Jahres) aggregiert werden. Geben Sie anschliessend eine Tabelle aus, die den einfachen Vergleich der Shipping‐DL fuer die Periode 2020/12 in Japan ermoeglicht. Bewertungsrelevant: Output, Code.
@@ -63,6 +65,8 @@ sdl_japan_202012 = sdl[sdl$region == "Japan" & sdl$Periode == "202012",]
 
 # Darstellung 
 sdl_japan_202012[order(-sdl_japan_202012$OTD),]
+
+#TODO OTD runden auf vierte Stelle
 ```
 
 ##Modellierung: Warehousing
@@ -77,6 +81,9 @@ cps_wh = services[services$vendor == "CPS Warehousing",]
 
 # cps_wh und externals in neuem Dataframe auf Periode und Region mergen.
 cps_wh_externals = merge(cps_wh, externals, by = c("region","Periode"))
+
+# Output
+cps_wh_externals %>% head()
 ```
 
 5) Sie moechten sich eine Uebersicht zu der Korrelation zwischen den externen Faktoren und der IFR des Warehousing‐Dienstleister schaffen. Fuehren Sie dazu die folgenden Schritte aus:
@@ -121,21 +128,34 @@ cps_wh_externals[, c("Periode", "region", "IFR.x", "Baseline")] %>% head()
 
 7) Visualisieren Sie die Baseline Ihres gewaehlten LDL fuer den Zeitraum von 2016 bis 2020 sowie die IFR in der Region Shanghai. Bewertungsrelevant: Output.
 ```{r}
-wilke = cps_wh_externals[(cps_wh_externals$Year.x >= 2016 | cps_wh_externals$Year.x <= 2020) & cps_wh_externals$region == "Shangh", ]
+plot_data = cps_wh_externals[(cps_wh_externals$Year.x >= 2016 | cps_wh_externals$Year.x <= 2020) & cps_wh_externals$region == "Shangh",]
+plot_data1 = plot_data[c("Periode","Baseline")]
+colnames(plot_data1)[2] <- "y_data"
+plot_data1$groupVar = "Baseline"
+plot_data2 = plot_data[c("Periode","IFR.x")]
+colnames(plot_data2)[2] <- "y_data"
+plot_data2$groupVar = "IFR"
+plot_data = rbind(plot_data1,plot_data2)
+plot_data$groupVar = as.factor(plot_data2$groupVar)
+ 
+ggplot(data = plot_data, aes(x = Periode, y = y_data, color = groupVar)) + 
+  geom_line() +
+  # Beschriftung von x-Achse 90 Grad umgedreht
+  theme(axis.text.x = element_text(angle=90, vjust = 0.5)) + 
+  xlab("Periode YYYY/MM")
 
-wilke$Periode = as.numeric(wilke$Periode)
+ggplot(data = plot_data, aes(x = Periode, y = y_data, group = 1, color = groupVar)) + 
+  geom_line() +
+  # Beschriftung von x-Achse 90 Grad umgedreht
+  theme(axis.text.x = element_text(angle=90, vjust = 0.5)) + 
+  xlab("Periode YYYY/MM")
 
-ggplot(data = wilke, aes(x = Periode, y = Baseline)) + 
-  geom_point() + 
-  geom_smooth(se = FALSE, method = loess)
 
-
-cps_wh_externals[(cps_wh_externals$Year.x >= 2016 | cps_wh_externals$Year.x <= 2020) & cps_wh_externals$region == "Shangh", ] %>% 
-  ggplot(data = ., aes(x = Periode, y = Baseline)) + 
-  # Punktwolke
-  geom_point(shape = 21, size = 1.5, colour = "blue") + 
-  # Glaettungsgerade fuer die Interpretation des Zusammenhangs
-  geom_smooth(se = FALSE, method = "auto")
+ggplot(data = df_EG, aes(x = period, y = value, group = 1 , color = grp)) + 
+  geom_line() +
+  # Beschriftung von x-Achse 90 Grad umgedreht
+  theme(axis.text.x = element_text(angle=90, vjust = 0.5)) + 
+  xlab("Periode YYYY/MM")
 ```
 
 8) Bewerten Sie die Baseline fuer Ihren gewaehlten Warehousing‐Logistikdienstleister nach MAE und MAPE.Bewertungsrelevant: Output.
