@@ -1,5 +1,5 @@
 ---
-title: "SCA_WS2021_Gruppe105_HA1"
+title: "SCA_WS2021_Gruppe105_HA2"
 output:
   word_document: default
   html_document: default
@@ -11,399 +11,409 @@ knitr::opts_chunk$set(echo = TRUE)
 
 #Setup environment
 library(tidyverse)
-
-#install.packages("data.table")
-library(data.table)
-
 library("zoo")
 library("forecast")
+library("ggplot2")
 ```
 
-## R Markdown
-
-Hausaufgabe 2
 ```{r}
-
-#Setup environment for HA2
 cost = read.csv2("output_cost_8Players_v0010.csv")
 prices = read.csv2("output_prices_8Players_v0010.csv")
 services = read.csv2("output_services_8Players_v0010.csv")
 transactions = read.csv2("output_transactions_8Players_v0010.csv")
 ```
 
-1) Aggregieren Sie die Verkaufszahlen so, dass Sie eine Tabelle mit der Nachfrage je Monat je Region bekommen
-(fuer alle Produkte zusammen einschliesslich Lost Sales! Sie brauchen diese Daten, um die Nachfrage in einer
-Region abzuschaetzen). Bereinigen Sie die Daten anschliessend von unnuetzen Daten. Die Daten sollten in
-einer neuen Variable mit dem Namen “Demand” gespeichert werden. Die Spalte, welche im DF transactions
-noch “Sales” heisst, soll im neuen DF Demand “Demand” heissen. Geben Sie nur den Tabellenkopf aus. Bewertungsrelevant:
-Code, Output.
+
+### Vorbereitung der Daten ###
+
+## Aufgabe 1) Aggregation der Verkaufszahlen je Monat je Region 
 ```{r}
-#Variable Periode erzeugen.YYYY/MM
-transactions$Periode = "YYYY/MM"
+#Variable Periode (YYYY-MM) erzeugen 
+transactions$Periode = sprintf("%02d-%02d", transactions$Year, 
+                                            transactions$Month)
+#LONG-Format
+Demand <- aggregate(list(Sales=transactions$Sales), 
+             by=list(region=transactions$region, transactions$Periode), sum)
 
-#Füge 0 hinzu falls Monat kleiner 10 ist. 
-transactions[transactions$Month < 10,]$Periode = paste (transactions[transactions$Month < 10,]$Year, transactions[transactions$Month < 10,]$Month, sep = "/0") 
+# Entfernen von Sales, die 0 beinhalten und Duplikate, da Sales nach der 
+# Aufgabenbeschreibung ueber den Tag aufsummiert sind
+transactions = transactions[transactions$Sales != 0,] %>% unique(.)
 
-#Bei Monat größer gleich 10 muss keine 0 hinzugefügt werden.
-transactions[transactions$Month >= 10,]$Periode = paste (transactions[transactions$Month >= 10,]$Year, transactions[transactions$Month >= 10,]$Month, sep = "/")
+# Tabellen werden benannt. Die Spalte "Sales" wird in "Demand" umbenannt.
+colnames(Demand) = c("region", "Periode", "Demand")
 
-#Datenbereinigung: Transaktionen mit Sales < 0 interessieren uns nicht. Zusätzlich enternen wir Duplikate. Viele Transaktionen kommen doppelt vor, vorallem Lost Sales ist auffällig.
-transactions = transactions[transactions$Sales > 0,] %>% unique(.)
-
-#Tabelle mit der Nachfrage je Monat je Region: Aggregieren Sales auf Region und Periode für Gruppe105 und Lost Sales
-demand <- transactions %>% aggregate(Sales~region+Periode, data=., sum) 
-
-#Umbenennen von Sales zu Demand. region zu Region umbenennen.
-colnames(demand)[3] <- "Demand"
-colnames(demand)[1] <- "Region"
-
-#Tabellenkopf ausgeben
-demand %>% head()
-
+# Der Tabellenkopf wird angezeigt
+head(Demand)
 ```
 
-2) Wandeln Sie die aggregierten Demand‐Daten vom Long‐Format in das Wide‐Format um. (Fuer den vorliegenden
-Fall gibt es im Long‐Format drei Spalten: Periode, Region und Demand. Im Wide‐Format gibt es im vorliegenden
-Fall sechs Spalten: Periode, Demand in Japan, Demand in Peking, Demand in Phlppn, Demand in
-Shangh, und Demand in Skorea.) Nutzen Sie dazu die Reshape()‐Funktion. Infos unter diesem Link (<– bitte
-anklicken). Geben Sie nur den Tabellenkopf aus. Bewertungsrelevant: Code, Output.
+## Aufgabe 2) Umwandeln von Long‐Format in das Wide‐Format. 
 ```{r}
-demand = reshape(demand, timevar = "Region", idvar = "Periode", direction="wide")
-colnames(demand) = c("Periode", "Demand in Japan", "Demand in Peking", "Demand in Phlppn", "Demand in Shangh", "Demand in Skorea")
-demand
+# LONG-Format mit drei Spalten
+Demand <- aggregate(list(Sales=transactions$Sales), 
+          by=list(region=transactions$region, 
+                 Periode=transactions$Periode), sum)
+
+# Entfernen von Sales, die 0 beinhalten und Duplikate 
+Demand <- data.frame(data = subset(Demand, Sales != 0)) %>% unique(.)
+
+# Spaltennamen werden uebergeben
+colnames(Demand) = c("Region", "Periode", "Demand")
+
+
+# Umwandeln von aggregierten Demand‐Daten vom Long‐Format in das Wide‐Format.
+# Im WIDE-Format mit sechs Spalten erzeugt mittels der Reshape()-Funktion 
+Demand = reshape(Demand, 
+                 idvar = "Periode",  # Spalte bleibt unveraendert
+                 timevar = "Region", # Spalte teilt sich in mehrere Spalten
+                 direction = "wide"  # Typ
+                 )
+
+# Spaltennamen werden uebergeben
+colnames(Demand) = c("Periode", "Demand in Japan", "Demand in Peking", 
+                     "Demand in Phlppn", "Demand in Shangh", "Demand in Skorea")
+
+# Tabellenkopf wird ausgegeben
+head(Demand)
 ```
 
-3) Wandeln Sie die aggregierten Verkaufszahlen in den Datentyp time‐series mit Frequenz = 12 um. Jede Demand‐
-Spalte (jeder Vektor) soll dabei in eine Time Series umgewandelt werden. Dafuer benoetigt es nur 5 Befehle.
-Fuer diese Aufgabe brauchen Sie nichts ausgeben. Bewertungsrelevant: Code.
+
+## Aufgabe 3) Umwandeln der aggregierten Verkaufszahlen in  Datentyp time‐series 
 ```{r}
-demand_ts_japan = ts(demand$`Demand in Japan`, frequency = 12)
-demand_ts_peking = ts(demand$`Demand in Peking`, frequency = 12)
-demand_ts_phlppn = ts(demand$`Demand in Phlppn`, frequency = 12)
-demand_ts_shangh = ts(demand$`Demand in Shangh`, frequency = 12)
-demand_ts_skorea = ts(demand$`Demand in Skorea`, frequency = 12)
+# Datentyp umwandeln (typecast)
+demand_ts_japan = ts(Demand$`Demand in Japan`, frequency = 12)
+demand_ts_peking = ts(Demand$`Demand in Peking`, frequency = 12)
+demand_ts_phlppn = ts(Demand$`Demand in Phlppn`, frequency = 12)
+demand_ts_shangh = ts(Demand$`Demand in Shangh`, frequency = 12)
+demand_ts_skorea = ts(Demand$`Demand in Skorea`, frequency = 12)
 ```
 
 
 
-*ZU BEARBEITEN*
-4) Fuer die exemplarische Region, visualisieren Sie den Nachfrageverlauf sinnvoll. Begruenden Sie Ihre Wahl der
-Visualisierung. Achten Sie auf uebersichtliche Achsenbeschriftungen. Bewertungsrelevant: Output, Begruendung.
-Hinweis: Wenn Sie ggplot verwenden, kann es notwendig sein, dass Sie bei den aesthetics zusaetzlich
-group = 1 angeben muessen, damit Sie einen Plot sehen. Eventuelle Fehlermeldungen sind nicht bewertungsrelevant.
+### Modellierung vorbereiten ###
+
+## Aufgabe 4) Visualisieren des Nachfrageverlaufs von der Region Shanghai 
 ```{r}
-#Examplarische Region ist Shangh.
-demand_shangh = c("Periode", "Demand in Shangh") %>% demand[.]
-
-#Liniendiagramm für die gesamte Zeitspanne.
-ggplot(demand_shangh, aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
-  geom_line() +
-  # Beschriftung von x-Achse 90 Grad umgedreht
-  theme(axis.text.x = element_text(angle=90, vjust = 0.5)) + 
-  xlab("Periode YYYY/MM")
-
-#Liniendiagramme für jedes Jahr zur genaueren Betrachtung.
-ggplot(demand_shangh[demand_shangh$Periode %like% "2016",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
-  geom_line() +
-  theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
-  xlab("Periode YYYY/MM")
-
-ggplot(demand_shangh[demand_shangh$Periode %like% "2017",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
-  geom_line() +
-  theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
-  xlab("Periode YYYY/MM")
-
-ggplot(demand_shangh[demand_shangh$Periode %like% "2018",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
-  geom_line() +
-  theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
-  xlab("Periode YYYY/MM")
-
-ggplot(demand_shangh[demand_shangh$Periode %like% "2019",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
-  geom_line() +
-  theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
-  xlab("Periode YYYY/MM")
-
-ggplot(demand_shangh[demand_shangh$Periode %like% "2020",], aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
-  geom_line() +
-  theme(axis.text.x = element_text(angle=45, vjust = 0.5)) + 
-  xlab("Periode YYYY/MM")
-
-#TODO X Achse in Quartale aufteilen.
-
-#Begründung: Unberechenbare Nachfrage. 
-
+# Visualisierung der Daten insgesamt 5 Jahre
+ ggplot(data = Demand, aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
+      geom_line() +          
+ 
+  # Periodenbeschriftung von x-Achse um 90 Grad gedreht, Schriftgroeße ist 7
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size = 7)) + 
+  
+  # Periode in 2 Jahrsabstaenden wiedergeben
+  scale_x_discrete(breaks = 
+                     Demand$Periode[seq(1, length(Demand$Periode), by = 2)]) +
+ 
+  # Titelbeschriftung der x-Achse
+  xlab("Periode Jahr-Monat") + 
+  
+  # Festgelegte Groeße fuer y-Achse 
+  ylim(12500, 21500)
 ```
+*Begruendung zu Aufgabe 4:*
+Wir haben uns fuer einen Liniendiagramm entschieden, da es am deutlichsten den 
+Nachfrageverlauf in Shanghai darstellt. 
+Fuer die x-Achse haben wir die Periode von Anfang 2016 bis Ende 2020 zu Grunde 
+gelegt. Auf der y-Achse haben wie die Nachfrage von 12500 bis 21500 eingegrenzt,
+um den Nachfrageverlauf besser zu verdeutlichen. Das Liniendiagramm zu waehlen 
+ist hier durchaus sinnvoll, da Trend und Saisonalitaeten auf Monatsebene 
+klar zu erkennen sind.
 
-5) Betrachten Sie die Visualisierung und nehmen Sie zu moeglichen Trends und Saisonalitaeten fuer die exemplarische
-Region Stellung. Erachten Sie eine Zeitreihenanalyse in diese Fall als sinnvolle Methode, um den
-Nachfrageverlauf zu modellieren? Angenommen, dies ist der Fall: Welche Annahme muessen sie dann treffen,
-um die Ergebnisse der Modellierung fuer Ihr Produkt nutzen zu koennen? Bewertungsrelevant: Kommentar.
-```{r}
-"Die Nachfrage ist jedes Jahr am anfang sehr hoch und sinkt dann erstmal ab. Eine besonders schlechte Nachfrage haben immer in Juli. Im Oktober zieht die Nachrage wieder an um dann wieder im Dezember stark zu sinken. Dieses Verhalten kann als Muster betrachtet werden. Daher macht eine Zeitreihenanalyse Sinn."
 
-#TODO Bullwhip Effekt?
-```
+## Aufgabe 5) Stellungnahme und Annahme
+*Stellungnahme Aufgabe 5:*
+In dem visualisierten Liniendiagramm wird ersichtlich, dass kein klarer Trend im 
+Hinblick auf die Nachfrage in Shanghai vorliegt. Ueber die Saisonalitaeten 
+leasst sich ein wiederkehrendes Verhalten aufeinanderfolgender 
+Periodenabschnitten in der x-Achse in den Monaten wiedererkennen. 
+Beispielsweise erkennt man in den Monaten zwischen Januar und Februar, dass die 
+Nachfrage ihren Hochpunkt erreicht und gegen Ende Februar wieder abnimmt.
+Der Tiefpunkt der Nachfrage befindet sich jedoch im November jeden wieder-
+kehrenden Jahres.
 
-6) Nutzen Sie nun Ihre exemplarische Region weiter. Fuehren Sie mit Hilfe der ets()‐Funktion eine Zeitreihenanalyse
-durch. Erstellen Sie ein Modell, indem Sie die automatische Festlegung der Modellparameter nutzen (model
-= “ZZZ”). Geben Sie (1) eine Zusammenfassung des Modells, (2) die urspruengliche Zeitreihe und (3) die Werte
-der Residuen aus. Bewertungsrelevant: Code, Output.
+*Annahme:*
+Um die Zeitreihenanalyse sinnvoll zu modellieren, muessen wir 
+verschiedene Annahmen treffen. Da wir historische Nachfragewerte als Indikator 
+fuer die zukuenftige Nachfrage voraussetzen, sollte darauf geachtet werden,dass 
+keine signifikanten Veraenderung im Nachfragemuster vorliegen. Außerdem ist es
+sinnvoll ein Liniendiagramm zu nehmen, da wir uns einen ersten guten Uberblick 
+ueber die Nachfrage verschaffen koennen. Um die Ergebnisse der Modellierung fuer 
+unser Produkt sinnvoll zu nutzen, muessen wir annehmen, dass die Informationen 
+quantifizierbar sind. Zudem ist es anzunehmen, dass das Vergangenheitsverhalten 
+andauert. Jedoch muessen wir beruecksichtigen, dass Nachfragevorhersagen immer 
+ungenau sind und kurzfristige Vorhersagen genauer sind als Langfristige.
+    
+
+
+
+### Modellierung ###
+
+## Aufgabe 6) Zeitreihenanalyse von der Region Shanghai
 ```{r}
 ets_shangh = ets(demand_ts_shangh, model = "ZZZ")
+```
 
+*1. Zusammenfassung des Modells*
+```{r}
 cat("\n Zusammenfassung des Modells: \n")
 summary(ets_shangh) 
+```
 
-cat("\n Ursprüngliche Zeitreihe: \n")
+*2. Urspruengliche Zeitreihe*
+```{r}
+cat("\n Urspruengliche Zeitreihe: \n")
 ets_shangh$x
+```
 
+*3. Werte der Residuen*
+```{r}
 cat("\n Residiuen: \n")
 ets_shangh$residuals
 ```
 
-7) Wie weit weichen die Modellwerte durchschnittlich von den Originalwerten ab? Interpretieren Sie das Ergebnis
-im Hinblick auf die Nutzung des Modells in einem beispielhaften Unternehmensprozess. Bewertungsrelevant:
-Output, Kommentar.
+
+
+
+## Aufgabe 7) Durchschnittliche Abweichung der Modellwerte zu den Originalwerten
 ```{r}
-#Durchschnittliche Abweichung berechnen.
-(ets_shangh$x - ets_shangh$fitted) %>% as.numeric() %>% mean()
-"Kommentar: Die Modellwerte weichen im durchschnitt um ca. 2.66 Einheiten von den Originalwerten ab. Wen diese Modell beim bestimmen der Bestellmenge verwendet wird, werden vorraussichtlich ca. 3 Einheiten zu wenig bestellt. Dabei sollte berücksichtigt werden, das dies ein Durchschnitt ist, was bedeutet, das mal zu viel, mal zu wenig bestellt wird."
+# Durchschnittliche Abweichung mit  Mean Forecast Error (MFE) berechnen
+# Mittelwert(Urspruengliche Zeitreihe - Vorhersagen fuer den gegebenen Zeitraum) 
+MFE <- round(mean(as.numeric(ets_shangh$x - ets_shangh$fitted)), 4)
+MFE
+```
+*Kommentar zu Aufgabe 7:*
+Die Modellwerte weichen durchschnittlich um 8.8178 von den Originalwerten ab. 
+In unserem Unternehmen in der Data Analytics Abteilung rechnen wir mit der 
+Fehlerkennzahl Mean Forecast Error (MFE). Das MFE gibt den durchschnittlichen 
+Fehler unserer Modellwerte zu den Originalwerten an.
+Diese setzt sich aus drei verschiedenen Schritten. 
+1. Berechnung der Original-Nachfragewerte.
+2. Berechnung der Vorhersage fuer den gegebenen Zeitraum.
+3. Differenz aus 1. und 2. berechnen und den Mittelwert daraus bilden.
+Es gilt je naeher das MFE bei 0 ist, desto genauer ist die Vorhersage. 
+
+
+
+## Aufgabe 8) Nachfragevorhersage fuer ein weiteres Jahr. 
+
+*Vorbereitung zu Aufgabe 8 + Zusammenfassung der voherigen Aufgaben*
+```{r}
+# Datentyp umwandeln (typecast)
+demand_ts_shangh = ts(Demand$`Demand in Shangh`, frequency = 12)
+
+# Zeitreihenanalyse aus Aufgabe 6
+ets_shangh = ets(demand_ts_shangh, model = "ZZZ")
+
+# Forecast der Variable fcast_Shangh (fuer exponentielle Glaettung) uebergeben
+# Der Output zeigt die Forecast-Werte sowie die oberen und unteren Grenzen 
+# der 80% und 95% Konfidenzintervalle.
+fcast_Shangh = forecast(ets_shangh, 12)
 ```
 
-
-
-*ZU BEARBEITEN*
-*JAHR UND MIONAT AUF DER X-ACHSE FEHLEN*
-8) Erstellen Sie eine Nachfragevorhersage fuer ein weiteres Jahr. 
-Visualisieren Sie den Nachfrageverlauf sowie den Verlauf Ihres Prognosemodells 
-in einem einzigen ggplot. Begruenden Sie die Wahl der Visualisierung. 
-Bewertungsrelevant: Code, Output, Begruendung.
-```{r}
-# Forecast der Variable fcast_Shangh (forecast fuer exponentielle Glaettung) uebergeben
-fcast_Shangh = forecast(ets_shangh$x, 12)
-
-# forecast ausgeben (anzeigen)
-fcast_Shangh
-```
-
-*Alternative 2*
-*Schritt 1 - DataFrame Original Nr. 1 erstellen*
+*1. DataFrame Original Nr. 1 erstellen*
 ```{r}
 # DataFrame erstellen
   df_Shangh_orig = data.frame(
-    period = seq(1, length(fcast_Shangh$x), 1), 
-    value = as.numeric(fcast_Shangh$x), 
-    grp = rep("original", length(fcast_Shangh$x)))
-  
-  # Anzeigen des DataFrame 
-  df_Shangh_orig
+                   period = seq(1, length(fcast_Shangh$x), 1), 
+                   value = as.numeric(fcast_Shangh$x), 
+                   grp = rep("original", length(fcast_Shangh$x)))
 ```
-*Schritt 2 - DataFrame Vorhersage Nr. 2 erstellen*
-(1) `Perioden`-Variable von 1 bis Laenge des Zeitreihe, einer 
-(2) `Value`-Variable mit den Werten der Zeitreihe des Forecasts sowie einer 
-(3) `grp`-Variable mit festem Wert *fcast*, welche fuer die Gruppierung genutzt wird.
+
+*2. DataFrame Vorhersage Nr. 2 erstellen*
 ```{r}
 # DataFrame erstellen
 df_Shangh_fcast = data.frame(
   period = seq(1, length(fcast_Shangh$fitted) + length(fcast_Shangh$mean), 1), 
   value = c(as.numeric(fcast_Shangh$fitted), as.numeric(fcast_Shangh$mean)), 
   grp = rep("fcast", length(fcast_Shangh$fitted) + length(fcast_Shangh$mean)))
-
-# Anzeigen des DataFrame (nur Kopf)
-df_Shangh_fcast
 ```
 
-*Schritt 3 - Verbinden der DataFrames Nr. 1 und Nr. 2*
+*3. Verbinden der DataFrames Nr. 1 und Nr. 2*
 ```{r}
 # Verbinden der Data Frames
 df_EG = rbind(df_Shangh_orig, df_Shangh_fcast)
 
 # Anzeigen des DataFrame (ausgewaehlte Beobachtungen)
-df_EG
+head(df_EG)
 ```
-
 *Schritt 4 - Visualisierung*
-*WAS FEHLT: MONAT UND JAHRE AUF X-ACHSE*
 ```{r}
 ggplot(data = df_EG, aes(x = period, 
-                         y = value, ymin = 12500, ymax = 21500, colour = grp)) + 
+                         y = value, colour = grp)) + 
   geom_line() +
 
-# Beschriftung von x-Achse 90 Grad umgedreht
-  theme(axis.text.x = element_text(angle=90, vjust = 0.5)) + 
-  xlab("Periode Jahr/Monat") + 
-  ylim(12500, 21500) 
+  # Beschriftung von x-Achse 90 Grad umgedreht
+  theme(axis.text.x = element_text(angle=90, vjust = 0.5, hjust=2, size=6)) + 
+  xlab("Period") + 
+  ylab("Demand") + 
+  ylim(13000, 20000) +
+  scale_colour_manual(breaks = c("fcast", "original"), 
+                      values = c("green", "red")) +
+  
+  ggtitle(label = "Demand in Shanghai",
+              subtitle = "Original and Forecast from 2016 to 2021")
 ```
 
-
-*Alternative 1*
-*YYYY/MM fehlt!*
-```{r}
-# Forecast der Variable fcast_Shangh (forecast fuer exponentielle Glaettung) uebergeben
-fcast_Shangh = forecast(ets_shangh$x, 24)
-
-# forecast ausgeben (anzeigen)
-fcast_Shangh
-
-
-# Hintergrund erzeugen (ohne Daten!)
-ggplot(data = NULL, aes(ymin = 0, ymax = 110000)) + 
-  
-  # Erste Linie Vorhersage (keine Daten; 
-  # X-Achse = Reihe von 1 bis laenge fitting Werten und Forecast Werten)
-  geom_line(data = NULL,  aes(
-    x = seq(1, length(c(fcast_Shangh$fitted, fcast_Shangh$mean)), 1), 
-                            
-    #Y-Achse = Kombination von fitting Werten und Forecast Werten
-    y = c(as.numeric(fcast_Shangh$fitted), as.numeric(fcast_Shangh$mean)),        
-      # Beschriftung fuer Farbe festlegen
-       colour = 'forecast'))  +                          
-  
-  # Zweite Linie Ursprung-Zeitreihe 
-  # (Keine Daten; X-Achse = Reihe von 1 bis laenge Beobachtungen)
-  # Y-Achse = Beobachtungen
-  # Beschriftung fuer Farbe festlegen
-  geom_line(data = NULL, aes(x = seq(1, length(fcast_Shangh$x), 1), 
-                             y = as.numeric(fcast_Shangh$x),                    
-                             colour = 'original')) +                            
-  
-  # Farben fuer Beschriftungen festlegen
-  scale_colour_manual(breaks = c("forecast", "original"), values = c("red", "blue")) +
-  
-  theme(axis.text.x = element_text(angle=90, vjust = 0.5)) + 
-  xlab("Periode Jahr/Monat") + 
-  ylim(12500, 21500)
-```
-Begruendung: Um den Nachfrageverlauf sowie die Vorhersage am ubersichtlichsten
+*Begruendung zu Aufgabe 8:* 
+Um den Nachfrageverlauf sowie die Vorhersage am ubersichtlichsten
 zu visualisieren, haben wir uns fuer einen Liniendiagramm entschieden. 
 Die Linie der urspruenglichen Nachfrage haben wir in Kombination mit der
-Linie der Vorhersage visualisiert.
-Auf der x-Achse haben wir die Perioden 0 bis 36 der urspruenglichen Nachfrage 
-sowie der Vorhersage abgebildet. 
-Auf der y-Achse findet sich die Anzahl der Nachfrage von 0 bis 110000 wieder.
+Linie der Vorhersage in visualisierter Form uebereinander gelegt.
+Dies ermoeglicht uns den direkten Vergleich beider Modelle.
+Auf der x-Achse umfasst die urspruengliche Nachfrage die Perioden 0 bis 60, 
+wobei die Vorhersage der Nachfrage zusaetzlich ein weiteres Jahr umfasst, also 
+die Perioden 0 bis 72. 
+Auf der y-Achse findet sich die Anzahl der Nachfrage wieder, die wir jedoch
+von 13000 und 20000 eingeschreankt haben, um die Linien besser zu lesen.
 Hierbei wird der direkte Vergleich am deutlichsten indem die Farbe rot fuer die
-Vorhersage steht und blau fur die urspruengliche Nachfrage. Daher ist die 
-Verwendung eines Liniendiagramms hier am sinnvollsten.
+Vorhersage steht und blau fur die urspruengliche Nachfrage. Zudem koennen wir
+die Abstaende zwischen Tief- und Hochpunkt anhand der eingefaerbten Punkte 
+auf einem Liniendiagramm besser vergleichen als mit anderen Diagrammtypen.
 
 
 
+## Aufgabe 9) Bewertung des Modells aus Aufgabe 6 mit Hilfe von 4 verschiedenen Fehler‐Kennzahlen
 
-9) Bewerten Sie Ihr Modell aus Aufgabe 6 mit Hilfe von 4 verschiedenen Fehler‐Kennzahlen, die Sie aus der Uebung
-kennen. Welche der Fehler‐Kennzahlen halten Sie fuer geeignet, um die Guete des Modells zu bewerten?
-Bewertungsrelevant: Output, Kommentar.
+### EG: (1) MFE
 ```{r}
-# (1) MFE, Mean Forecast Error
-MFE <- (ets_shangh$x - ets_shangh$fitted) %>% as.numeric(.) %>% mean(.)
+# MFE
+MFE <-mean(as.numeric(ets_shangh$x - ets_shangh$fitted))
+```
 
-# (2) MAE, Mean absolute Error
-MAE <- (ets_shangh$x - ets_shangh$fitted) %>% as.numeric(.) %>% abs(.)  %>% mean(.)
+### EG: (2) MAE
+```{r}
+# MAE
+MAE <- mean(abs(as.numeric(ets_shangh$x - ets_shangh$fitted)))
+```
 
-# (3) MSE, Mean squared Error 
-MSE <- (ets_shangh$x - ets_shangh$fitted)^2 %>% as.numeric(.) %>% mean(.)
+### EG: (3) MSE
+```{r}
+# MSE
+MSE <- mean((as.numeric(ets_shangh$x - ets_shangh$fitted)^2))
+```
 
-# (4) MAPE, Mean Absolute Percentage Error
-MAPE <- (((ets_shangh$x - ets_shangh$fitted)/ as.numeric(ets_shangh$x)) * 100) %>% as.numeric(.) %>% abs(.)  %>% mean(.)
-
+### EG: (4) MAPE
+```{r}
+# MAPE
+MAPE <- mean(abs((as.numeric(ets_shangh$x - ets_shangh$fitted)/
+                  as.numeric(ets_shangh$x))*100))
+```
+```{r}
 cat("Es liegen folgende vier Fehlerkennzahlen vor. MFE betraegt", MFE,
     ", MAE betreagt", MAE, ", MAE betreagt", MSE,
-    " und MAPE betreagt", MAPE)
+    "und MAPE betreagt", MAPE)
 ```
-Kommentar zu Aufgabe 9: 
-Der Mean Forecast Error (MFE) zeigt durchschnittliche Fehler eines Modells an,
-wobei sich positive und negative Fehler sich ausgleichen koennen.
 
-Der Mean absolute Error (MAE) zeigt durchschnittliche absolute Fehler.
-Der Ausgleich positiver und negativer Fehler wird verhindert, 
-jedoch anhängig von Skalierung der Daten und daher schwer vergleichbar.
-Zudem sind alle Fehler gleich gewichtet.
-
-Der Mean squared Error (MSE) zeigt durchschnittliche quadratische Fehler.
-Er verhindert den Ausgleich positiver und negativer Fehler, 
-jedoch ist es abhaengig von der Skalierung der Daten und daher schwer 
-vergleichbar. Größere Fehler werden stärker gewichtet aufgrund des Quadrierens.
-
-Der Mean Absolute Percentage Error (MAPE) zeigt durchschnittliche 
-prozentuale Fehler. Er ermöglicht Vergleichbarkeit bei unterschiedlicher 
-Skalierung. Zudem werden kleine Abweichungen bei kleinem y stark gewertet.
-
+*Kommentar zu Aufgabe 9:*
 Wir halten die Fehlerkennzahl MFE und MAPE als geeignete Fehlerkennzahlen.
-MFE macht Sinn, da der durchschnittliche Fehler ersichtlich wird. Man
+MFE wuerde Sinn machen, da der durchschnittliche Fehler ersichtlich wird. Man
 erkennt in der Berechnung, wie sich die Abweichung von der vorigen Periode zur
 naechsten Periode verhealt.
 MAPE koennte man ebenfalls in Betracht ziehen, da uns die prozentuale Fehler-
 zahl bei der Auswertung helfen koennte. Hierbei ist darauf zu achten, dass keine
 große Abweichung des y-Wertes bzw. Nachfrage zur vorigen Periode vorliegt. 
+Zudem fokussieren sich viele Organisationen sich primaer auf MAPE,
+wenn es darum geht die Vorhersage Genauigkeit zu bestimmen.
 
 
 
-10) Vergleichen Sie Ihr Modell insgesamt mit Ihren Vermutungen aus Aufgabe 5. Was stellen Sie fest? Bewertungsrelevant:
-Kommentar.
 
-Kommentar zu Aufgabe 10: Beim Vergleich unseres voherigen Modells zu den 
-Vermutungen aus Aufgabe 5 koennen wir feststellen, dass sich der Zukunftstrend 
-in der Region Shanghai gegenueber dem urspruenglichen Trend sinkender Nachfrage 
-bestaetigen laesst.
-Zudem gibt es bei der Saisonalitaet zwar ein wiederkehrendes Verhaltensmuster
-im urspruenglichen Modell, jedoch hat die Nachfrage im Vorhersage Modell 
-geringere Schwankungen als as urspruengliche Modell. 
-Die Nachfrage im Vorhersage Modell zeigt uns kaum ein aussagekraeftiges 
-wiederkehrendes Verhalten in der Nachfrage, sodass wir annehmen koennen, dass
-sich die Nachfrage sich kaum nach einer Periode richtet und  tendenziell immer 
-weiter abnimmt.
-Allgemein erachten wir die Zeitreihenanalyse hier durchaus als sinnvoll, da wir 
-durch die historische Nachfrage als Indikator eine sinkende zukuenftige 
-Nachfrage identifiziert haben. Jedoch gilt es immer zu beruecksichtigen,
-dass die Vorhersagen immer eine gewissen Ungenauigkeit haben.
+## Aufgabe 10) Vergleich des Modells mit den Vermutungen aus Aufgabe 5
+*Kommentar zu Aufgabe 10:*
+Beim Vergleich unseres voherigen Modells und den Vermutungen aus Aufgabe 5 
+koennen wir feststellen, dass sich Saisonalitaeten wiedererkennen laesst.
+Ein klarer Trend liegt nicht eindeutig vor. 
+Man kann erkennen, dass die hoechste Nachfrage zwischen Januar 
+und Februar eintritt, und Ende Februar wieder abnimmt. Außerdem erkennt man, 
+dass die niedrigste Nachfrage im Monat November vorkommt und sich jedes Jahr 
+wiederholt.
+Die Vorhersage sagt aus, dass wir keine signifikante Abweichung
+zu den Vorjahren haben und somit genuegend Nachfrage herrscht.
+Zudem erkennt man Saisonalitaeten bzw. ein wiederkehrendes Verhaltensmuster
+im urspruenglichen Modell und Vorhersage Modell. Es gibt kleine Schwankungen 
+zwischen beiden Modellen. 
+Allgemein erachten wir die Zeitreihenanalyse hier durchaus als sinnvoll, 
+da wir durch die historische Nachfrage als Indikator eine stabile 
+zukuenftige Nachfrage identifiziert haben. 
+Jedoch gilt es immer zu beruecksichtigen, dass die Vorhersage immer eine 
+gewissen Ungenauigkeit hat. Zudem sind die Fehlerwerte gering. 
+Somit kann die Vorhersage mit hoher Genauigkeit aussagen, welche Nachfrage in 
+der Zukunft vorliegen wird.
 
 
 
-11) Erstellen Sie fuer die uebrigen Regionen ebenso Modelle zur Nachfragevorhersage (d.h. 4 weitere Modelle).
-Nutzen Sie erneut die automatische Festlegung der Modellparameter (model = "ZZZ"). Berechnen Sie zudem
-fuer jedes Modell den MAPE, um den Vergleich der Modelle zu ermoeglichen. Nehmen Sie dazu Stellung,
-welches Modell laut der bewertenden Information das “beste” der vier Modelle sei. Bewertungsrelevant: Output,
-Kommentar.
+## Aufgabe 11)  Modelle zur Nachfragevorhersage fuer 4 weitere Regionen
 ```{r}
-#Modelle für die übrigen Regionne erstellen.
-ets_japan = ets(demand_ts_japan, model = "ZZZ")
+#Modelle für die übrigen Regionen erstellen.
+fcast_japan = forecast(ets(demand_ts_japan, model = "ZZZ"), 12)
+fcast_peking = forecast(ets(demand_ts_peking, model = "ZZZ"), 12)
+fcast_phlppn = forecast(ets(demand_ts_phlppn, model = "ZZZ"), 12)
+fcast_skorea = forecast(ets(demand_ts_skorea, model = "ZZZ"), 12)
+
+
+#Funktion um MAPE zu berechnen
+mape <- function(actual,pred){
+           mape <- round(mean(abs((actual - pred)/actual))*100, 4)
+           return (mape) 
+}
+
+#MAPE ausgeben
+cat("Modell für Japan hat einen Wert für MAPE von", 
+    mape(demand_ts_japan, fcast_japan$fitted),".\n")
+cat("Modell für Peking hat einen Wert für MAPE von",
+    mape(demand_ts_peking, fcast_peking$fitted),".\n")
+cat("Modell für Phillipinen hat einen Wert für MAPE von", 
+    mape(demand_ts_phlppn, fcast_phlppn$fitted),".\n")
+cat("Modell für Suedkorea hat einen Wert für MAPE von", 
+    mape(demand_ts_skorea, fcast_skorea$fitted),".\n")
+```
+*Stellungnahme zu Aufgabe 11:*
+Der Mean Absolute Percentage Error (MAPE) zeigt den durchschnittlichen 
+prozentualen Fehler im Hinblick auf die Vorhersagegenauigkeit der Modelle an. 
+Allgemein gilt, dass MAPE die Vergleichbarkeit bei unterschiedlicher Skalierung 
+ermoeglicht und dass kleine Abweichungen bei kleinem y stark gewertet werden.
+Wenn wir die vier Regionen Japan, Peking, Phillipinen und Suedkorea miteinander
+vergleichen, erkennen wir, dass die Region Phillipinen den kleinsten MAPE-Wert
+von 0.8036 hat. Beim MAPE-Vergleich gilt, dass je kleiner der prozentuale 
+Fehler desto besser ist die Vorhersage. Dies trifft auf die Region Phillipinen
+zu, welches also das beste Modell im Vergleich zu den anderen Regionen ist.
+
+
+
+
+### Abschluss ###
+
+## Aufgabe 12) Untersuchung der Nachfrage nach Limonade in Peking, den Philippinen und Suedkorea fuer den naechsten Monat (Januar 2021)
+```{r}
 ets_peking = ets(demand_ts_peking, model = "ZZZ")
 ets_phlppn = ets(demand_ts_phlppn, model = "ZZZ")
 ets_skorea = ets(demand_ts_skorea, model = "ZZZ")
 
-#Funktion um MAPE zu berechnen
-mape <- function(actual,pred){
-           mape <- mean(abs((actual - pred)/actual))*100
-           return (mape)
-}
-
-#MAPE ausgeben
-cat("Modell für Japan hat einen Wert für MAPE von", mape(demand_ts_japan, ets_japan$fitted),".\n")
-cat("Modell für Peking hat einen Wert für MAPE von", mape(demand_ts_peking, ets_peking$fitted),".\n")
-cat("Modell für Phillipin hat einen Wert für MAPE von", mape(demand_ts_phlppn, ets_phlppn$fitted),".\n")
-cat("Modell für Südkorea hat einen Wert für MAPE von", mape(demand_ts_skorea, ets_skorea$fitted),".\n")
-```
-
-12) Ihre Chefin kommt bei einer Firmenfeier auf Sie zu und schlaegt Ihnen eine Wette vor. Sie sagt: “Ich wette mit
-Ihnen um 100 Euro, dass die Nachfrage nach Limonade in Peking, den Philippinen und Suedkorea im naechsten
-Monat (Januar 2021) in Summe 45.000 Flaschen nicht uebersteigen wird.” Sollten Sie diese Wette eingehen?
-Bewertungsrelevant: Output, Kommentar.
-*SPALTE UMBENENNEN*
-```{r}
-fcast_Peking = data.frame(forecast(ets_peking, 12))
-fcast_Philippinen = data.frame(forecast(ets_phlppn, 12))
-fcast_Suedkorea = data.frame(forecast(ets_skorea, 12))
+fcast_peking = data.frame(forecast(ets_peking, 12))
+fcast_phlppn = data.frame(forecast(ets_phlppn, 12))
+fcast_skorea = data.frame(forecast(ets_skorea, 12))
 
 # Dataframe kombinieren und Summe von Sales für Peking, Philippinen und Südkorea
-SumRegion <- rbind(fcast_Peking + fcast_Philippinen + fcast_Suedkorea)
+SumRegion <- rbind(fcast_peking + fcast_phlppn + fcast_skorea)
 
 # Tabellenkopf erste Zeile bzw. Januar 2021 von forecast ausgeben
 head(SumRegion, 1)
 ```
+*Kommentar zu Aufgabe 12:* 
+Der Output zeigt die Forecast-Werte sowie die oberen und unteren Grenzen 
+der 80% und 95% Konfidenzintervalle an. Der wahre Wert liegt mit 95%iger
+Sicherheit zwischen den Nachfragewerten 45832.09 und 48422.44.
+Wir gehen die Wette ein, da wir mit 95%iger Sicherheit sagen koennen, dass die 
+Nachfrage nach Limonade in Peking, den Philippinen und Suedkorea im naechsten 
+Monat in der Summe ca. bei 47127 liegen wird. 
+Somit uebersteigt die Nachfrage nach Limonade um 2127 Limonadeflaschen und wir 
+wuerden die Wette mit 95%iger Sicherheit gewinnen.
+Es gilt jedoch immer eine gewisse Unersicherheit, da wir nicht 100% sagen 
+koennen, ob die Nachfrage nach ueber 45.000 Limoadenflaschen uebersteigt.
 
 
 
-13) Ihr guter Freund Olaf wohnt in Shanghai und besitzt dort drei der Supermaerkte, die Ihre Limonaden‐Marke
-fuehren. Er wuerde gern wissen, wie viel Limonade er im ersten Quartal von 2021 wahrscheinlich bestellen
-muss. Helfen Sie Olaf. Bewertungsrelevant: Output, Kommentar.
+## Aufgabe 13) Berechnung der Nachfragevorhersage im ersten Quartal von 2021 in Shanghai fuer drei Supermaerkte.
 ```{r}
 # (1) Datenbereinigen: Nur Produkt Gruppe105 in der Region Shanghai 
 DemandShanghai = subset(transactions, Product == "Gruppe105" & 
@@ -429,15 +439,21 @@ fcast1_Shanghai <- round((fcast1_Shanghai[1]/5)*3,2)
 # Spaltenname aendern
 colnames(fcast1_Shanghai) = c("Demand Forecast Q1")
 
+
 # 3 Monate bzw. ein Quartal anzeigen
 head(fcast1_Shanghai, 3)[1]
-
-#TODO Periode anpassen
 ```
-Kommentar zu Aufgabe 13: Anhand unseres Vorhersagemodells basierend auf den
+*Kommentar zu Aufgabe 13:*
+ Anhand unseres Vorhersagemodells basierend auf den
 Vergangenheitsdaten der Nachfrage in Shanghai empfehlen wir unseren Freund Olaf 
 im ersten Quartal in Januar 1681 Limonaden-Flaschen zu kaufen sowie im Februar 
-1699 und im Maerz 1510 Limonaden-Flaschen. Hier gilt es insbesondere zu 
+1699 und im Maerz 1511 Limonaden-Flaschen. Hier gilt es insbesondere zu 
 beruecksichtigen, dass die alte Vorhersage alle fuenf Geschaefte und ihre Nach-
 fragemenge umfasse, daher haben wir die Anzahl der Nachfrage auf die Anzahl
 der drei Supermaerkte reduziert, die Olaf besitzt.
+
+
+
+
+ 
+
