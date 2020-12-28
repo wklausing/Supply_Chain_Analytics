@@ -324,8 +324,6 @@ cat("Begruendung zu Aufgabe 17: Wir entscheiden uns fuer eine Heat-Map, wobei di
 cat("Kommentar: Es faellt auf das DWL Warehousing besonders schlecht in Japan liefert, dort sollte man auf IntEx Warehousing umgesteigen. Generel laesst die Heat-Map leicht ablesen, welcher WH-DL in welcher Region gut/schlecht liefern, gemessen an IFR.")
 ```
 
-```
-
 
 18) Visualisieren Sie in geeigneter Form die Qualitaetskennzahl der Shipping‐Dienstleister je Monat fuer das Jahr
 2017 in einem ggplot (ueber alle Regionen zusammen) Wie bewerten Sie die Qualitaet der Shipping‐DL insgesamt?
