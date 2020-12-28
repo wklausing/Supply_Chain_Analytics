@@ -12,471 +12,166 @@ library("tidyverse")
 library("zoo")
 library("forecast")
 library("ggplot2")
-library("data.table")
+library("GGally")
+
+#library("data.table")
 ```
 
+1) Laden Sie die Datensaetze externals und services. Berechnen Sie ueber den gesamten Datensatz services, d.h. fuer jede durchgefuehrte Dienstleistung, den On‐Time‐Delivery (OTD) Status (d.h. 0 oder FALSE, wenn unpuenktlich; 1 oder TRUE wenn puenktlich) sowie die Item Fill Rate (IFR). Stellen Sie an‐ schliessend jeweils die Kennzahlen der durchschnittlichen OTD‐Rate und der durchschnittlichen Item Fill Rate als Kennzahl je Logistikdienstleister aggregiert dar. Geben Sie diese Werte in zwei Tabellen aus. Die Tabellen sollen einen einfachen Vergleich der LDL ermöglichen. Bewertungsrelevant: Output, Code.
+Hinweis: Erneut bietet es sich an, eine Variable Periode dem Datensatz hinzu zu fuegen, welche aus Jahr und Monat besteht (im Format YYYYMM, z.B. Februar 2014 –> 201402)
 ```{r}
-cost = read.csv2("output_cost_8Players_v0010.csv")
-prices = read.csv2("output_prices_8Players_v0010.csv")
+#Daten einlesen.
+externals = read.csv2("externals10.csv")
 services = read.csv2("output_services_8Players_v0010.csv")
-transactions = read.csv2("output_transactions_8Players_v0010.csv")
+
+#OTD und IFR berechnen.
+services$OTD = services$DaysScheduled >= services$DaysExecuted
+services$IFR = services$QExecuted / services$QScheduled
+
+#Durchschnittliche OTD‐Rate und durchschnittliche Item Fill Rate als Kennzahl je Logistikdienstleister aggregiert darstellen.
+mean_OTD_vendor = services %>% aggregate(OTD ~ vendor, data = ., mean)
+mean_IFR_vendor = services %>% aggregate(IFR ~ vendor, data = ., mean)
+
+#Darstellung
+mean_OTD_vendor[order(-mean_OTD_vendor$OTD),]
+mean_IFR_vendor[order(-mean_IFR_vendor$IFR),]
+
+#Erstellen von Periode-Variable
+services$Periode = sprintf("%02d%02d", services$Year, services$Month)
+
 ```
 
-
-## Vorbereitung der Daten
-
-# Aufgabe 1) Aggregation der Verkaufszahlen, sodass eine Tabelle mit der 
-# Nachfrage je Monat je Region angezeigt wird.
+2) Erzeugen Sie ein neues Dataframe, welches die aggregierte IFR je Warehousing‐Logistikdienstleister enthaelt. Die IFR soll je LDL (nur Warehousing), Region und Periode (eine Periode = ein Monat eines einzelnen Jahres) aggregiert werden. Geben Sie anschliessend eine Tabelle aus, die den einfachen Vergleich der WH‐DL fuer die Periode 2020/12 in Japan ermoeglicht. Bewertungsrelevant: Output, Code.
 ```{r}
-#Variable Periode (YYYY-MM) erzeugen 
-transactions$Periode = sprintf("%02d-%02d", transactions$Year, 
-                                            transactions$Month)
-#LONG-Format
-Demand <- aggregate(list(Sales=transactions$Sales), 
-             by=list(region=transactions$region, transactions$Periode), sum)
+# IFR je LDL (nur Warehousing), Region und Periode (eine Periode = ein Monat eines einzelnen Jahres) aggregiert.
+wdl = services[services$service == "Warehousing",] %>% aggregate(IFR ~ vendor+region+Periode, data = ., mean)
 
-# Entfernen von Sales, die 0 beinhalten und Duplikate, da Sales nach der 
-# Aufgabenbeschreibung ueber den Tag aufsummiert sind
-transactions = transactions[transactions$Sales != 0,] %>% unique(.)
+# Nur Japan und Periode 2020/12
+wdl_japan_202012 = wdl[wdl$region == "Japan" & wdl$Periode == "202012",]
 
-# Tabellen werden benannt. Die Spalte "Sales" wird in "Demand" umbenannt.
-colnames(Demand) = c("region", "Periode", "Demand")
-
-# Der Tabellenkopf wird angezeigt
-head(Demand)
+# Darstellung 
+wdl_japan_202012[order(-wdl_japan_202012$IFR),]
 ```
 
-# Aufgabe 2) Umwandeln von Long‐Format in das Wide‐Format. 
-
+3) Erzeugen Sie ein neues Dataframe, welches die aggregierte OTD je Shipping‐Logistikdienstleister enthaelt. Die OTD soll je LDL (nur Shipping), Region und Periode (eine Periode = ein Monat eines einzelnen Jahres) aggregiert werden. Geben Sie anschliessend eine Tabelle aus, die den einfachen Vergleich der Shipping‐DL fuer die Periode 2020/12 in Japan ermoeglicht. Bewertungsrelevant: Output, Code.
 ```{r}
-# LONG-Format mit drei Spalten
-Demand <- aggregate(list(Sales=transactions$Sales), 
-          by=list(region=transactions$region, 
-                 Periode=transactions$Periode), sum)
+# IFR je LDL (nur Warehousing), Region und Periode (eine Periode = ein Monat eines einzelnen Jahres) aggregiert.
+sdl = services[services$service == "Shipping",] %>% aggregate(OTD ~ vendor+region+Periode, data = ., mean)
 
-# Entfernen von Sales, die 0 beinhalten und Duplikate 
-Demand <- data.frame(data = subset(Demand, Sales != 0)) %>% unique(.)
+# Nur Japan und Periode 2020/12
+sdl_japan_202012 = sdl[sdl$region == "Japan" & sdl$Periode == "202012",]
 
-# Spaltennamen werden uebergeben
-colnames(Demand) = c("Region", "Periode", "Demand")
-
-
-# Umwandeln von aggregierten Demand‐Daten vom Long‐Format in das Wide‐Format.
-# Im WIDE-Format mit sechs Spalten erzeugt mittels der Reshape()-Funktion 
-Demand = reshape(Demand, 
-                 idvar = "Periode",  # Spalte bleibt unveraendert
-                 timevar = "Region", # Spalte teilt sich in mehrere Spalten
-                 direction = "wide"  # Typ
-                 )
-
-# Spaltennamen werden uebergeben
-colnames(Demand) = c("Periode", "Demand in Japan", "Demand in Peking", 
-                     "Demand in Phlppn", "Demand in Shangh", "Demand in Skorea")
-
-# Tabellenkopf wird ausgegeben
-head(Demand)
+# Darstellung 
+sdl_japan_202012[order(-sdl_japan_202012$OTD),]
 ```
 
-
-3) Umwandeln der aggregierten Verkaufszahlen in den Datentyp time‐series 
-mit Frequenz=12.
-Bewertungsrelevant: Code.
+##Modellierung: Warehousing
+4) Waehlen Sie den Warehousing‐DL “CPS Warehousing” aus. Vereinigen Sie das eben erzeugte DataFrame (genauer: Ein Subset dieses Dataframes bezueglich des gewaehlten Warehousing‐DL) mit den externen Faktoren der jeweiligen Periode und Region in einem neuen Dataframe. Zeigen Sie davon den Tabellenkopf. Bewertungsrelevant: Output.
+Hinweis: In der Funktion merge() koennen mehrere ueberschneidende Spalten genutzt werden, indem dem “by =”‐Parameter ein Vektor der Spalten uebergeben wird. Ihnen steht frei, andere Funktionen zu verwenden.
 ```{r}
-# Datentyp umwandeln (typecast)
-demand_ts_japan = ts(Demand$`Demand in Japan`, frequency = 12)
-demand_ts_peking = ts(Demand$`Demand in Peking`, frequency = 12)
-demand_ts_phlppn = ts(Demand$`Demand in Phlppn`, frequency = 12)
-demand_ts_shangh = ts(Demand$`Demand in Shangh`, frequency = 12)
-demand_ts_skorea = ts(Demand$`Demand in Skorea`, frequency = 12)
+# Spalte Periode für externals erzeugen um mergen zu erleichtern.
+externals$Periode = sprintf("%02d%02d", externals$Year, externals$Month)
+
+# CPS Warehousing subset
+cps_wh = services[services$vendor == "CPS Warehousing",]
+
+# cps_wh und externals in neuem Dataframe auf Periode und Region mergen.
+cps_wh_externals = merge(cps_wh, externals, by = c("region","Periode"))
 ```
 
-
-### Modellierung vorbereiten
-
-# Aufgabe 4) Visualisieren des Nachfrageverlaufs von der Region Shanghai 
-Bewertungsrelevant: Output, Begruendung.
+5) Sie moechten sich eine Uebersicht zu der Korrelation zwischen den externen Faktoren und der IFR des Warehousing‐Dienstleister schaffen. Fuehren Sie dazu die folgenden Schritte aus:
+(a) Geben Sie eine unsortierte Tabelle aus, in der die externen Effekte und deren Korrelation zur IFR abgebildet sind.
 ```{r}
-# Visualisierung der Daten insgesamt 5 Jahre
- ggplot(data = Demand, aes(x = Periode, y = `Demand in Shangh`, group=1)) + 
-      geom_line() +          
- 
-  # Periodenbeschriftung von x-Achse um 90 Grad gedreht, Schriftgroeße ist 7
-  theme(axis.text.x = element_text(angle = 45, hjust=1, vjust=1, size = 7)) + 
-  
-  # Periode in 2 Jahrsabstaenden wiedergeben
-  scale_x_discrete(breaks = 
-                     Demand$Periode[seq(1, length(Demand$Periode), by = 2)]) +
- 
-  # Titelbeschriftung der x-Achse
-  xlab("Periode Jahr-Monat")
+correlations = cor(cps_wh_externals$IFR, cps_wh_externals[, c(21:42)]) %>% as.data.frame(.) %>% t(.)
+colnames(correlations) <- c("Korrelation zu IFR")
+correlations
 ```
-*Begruendung zu Aufgabe 4*
-Wir haben uns fuer einen Liniendiagramm entschieden, da es am deutlichsten den 
-Nachfrageverlauf in Shanghai darstellt. Besonders der Auf- und Abstieg wird gut
-dargestellt.
-Fuer die x-Achse haben wir die Periode von Anfang 2016 bis Ende 2020 zu Grunde 
-gelegt. Auf der y-Achse haben wie die Nachfrage von 12500 bis 21500 eingegrenzt,
-um den Nachfrageverlauf besser zu verdeutlichen. Das Liniendiagramm zu waehlen 
-ist hier durchaus sinnvoll, da Trend und Saisonalitaeten auf Monatsebene 
-klar zu erkennen sind.
-
-
-# Aufgabe 5) 
-*Stellungnahme Aufgabe 5*
-In dem visualisierten Liniendiagramm wird ersichtlich, dass kein klarer Trend im 
-Hinblick auf die Nachfrage in Shanghai vorliegt. Ueber die Saisonalitaeten 
-leasst sich ein wiederkehrendes Verhalten aufeinanderfolgender 
-Periodenabschnitten in der x-Achse in den Monaten wiedererkennen. 
-Beispielsweise erkennt man in den Monaten zwischen Januar und Februar, dass die 
-Nachfrage ihren Hochpunkt erreicht und gegen Ende Februar wieder abnimmt.
-Der Tiefpunkt der Nachfrage befindet sich jedoch im November jeden wieder-
-kehrenden Jahres.
-
-*Annahme*
-Um die Zeitreihenanalyse sinnvoll zu modellieren, muessen wir 
-verschiedene Annahmen treffen. Da wir historische Nachfragewerte als Indikator 
-fuer die zukuenftige Nachfrage voraussetzen, sollte darauf geachtet werden,dass 
-keine signifikanten Veraenderung im Nachfragemuster vorliegen. Außerdem ist es
-sinnvoll ein Liniendiagramm zu nehmen, da wir uns einen ersten guten Uberblick 
-ueber die Nachfrage verschaffen koennen. Um die Ergebnisse der Modellierung fuer 
-unser Produkt sinnvoll zu nutzen, muessen wir annehmen, dass die Informationen 
-quantifizierbar sind. Zudem ist es anzunehmen, dass das Vergangenheitsverhalten 
-andauert. Jedoch muessen wir beruecksichtigen, dass Nachfragevorhersagen immer 
-ungenau sind und kurzfristige Vorhersagen genauer sind als Langfristige.
-    
-
-
-
-### Modellierung
-
-6) Zeitreihenanalyse von der Region Shanghai. 
+(b) Geben Sie eine Tabelle aus,in der die 5 am starksten zur IFR korrelierenden externen Effekten und deren Korrelation zur IFR abgebildet sind.
 ```{r}
-ets_shangh = ets(demand_ts_shangh, model = "ZZZ")
-```
+correlations_ordered = data.frame(Features = row.names(correlations), correlations)
+rownames(correlations_ordered) <- NULL
 
-*1. Zusammenfassung des Modells*
+# Korrelationen sind start wenn sie nahe 1 oder nahe -1 sind, daher müssen die Absoluten Werte genommen werden.
+correlations_ordered$Korrelation.zu.IFR = abs(correlations_ordered$Korrelation.zu.IFR) 
+correlations_ordered[order(-correlations_ordered$Korrelation.zu.IFR),] %>% head( ., 5)
+```
+(c) Erstellen Sie ein Korrelations‐Plot fuer diese 5 externen Faktoren. Bewertungsrelevant: Output.
 ```{r}
-cat("\n Zusammenfassung des Modells: \n")
-summary(ets_shangh) 
+# Correlation Plot erzeugen 
+ggpairs(cps_wh_externals[, c("AvgHealth", "InternetStability", "BusinessConfidence", "ParkingSpaceAvailability", "Congestion")], 
+        
+        # ohne Visualisierung des Fortschritts der Erstellung des plots
+        progress = FALSE,
+        
+        # mit Visualisierung einer Glaettungslinie und Aenderung der Farbe der Punkte, damit Linie erkennbar
+        lower = list(continuous = wrap("smooth_loess", colour = "steelblue1")))
 ```
 
-*2. Urspruengliche Zeitreihe*
+6) Sie moechten nun eine Lineare Regression durchfuehren, um die IFR mit Hilfe der externen Effekte vorherzusagen. Um die Guete Ihrer Modelle vergleichen zu koennen, benoetigen Sie eine geeignete Baseline. Erzeugen Sie eine sinnvolle Baseline in dem DataFrame zu Ihrem gewaehlten Warehousing‐DL in einer Variable Baseline. Begruenden Sie Ihre Wahl. Geben Sie von dem DataFrame den Tabellenkopf aus. Geben Sie Sie nur die Spalten ‘Periode’, ‘Region’, ‘IFR’ und ‘Baseline’ aus. Bewertungsrelevant: Output, Begruendung.
 ```{r}
-cat("\n Urspruengliche Zeitreihe: \n")
-ets_shangh$x
+# Baseline ist durschnittlicher IFR vom Monat.
+cps_wh_externals = cps_wh_externals %>% aggregate(IFR ~ Periode, data = ., mean) %>% merge(cps_wh_externals, ., by = c("Periode"))
+
+# Spalte richtig benennen.
+colnames(cps_wh_externals)[43] = "Baseline"
+
+# Tabellenkopf ausgeben.
+cps_wh_externals[, c("Periode", "region", "IFR.x", "Baseline")] %>% head()
 ```
 
-*3. Werte der Residuen*
+7) Visualisieren Sie die Baseline Ihres gewaehlten LDL fuer den Zeitraum von 2016 bis 2020 sowie die IFR in der Region Shanghai. Bewertungsrelevant: Output.
 ```{r}
-cat("\n Residiuen: \n")
-ets_shangh$residuals
+wilke = cps_wh_externals[(cps_wh_externals$Year.x >= 2016 | cps_wh_externals$Year.x <= 2020) & cps_wh_externals$region == "Shangh", ]
+
+wilke$Periode = as.numeric(wilke$Periode)
+
+ggplot(data = wilke, aes(x = Periode, y = Baseline)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE, method = loess)
+
+
+cps_wh_externals[(cps_wh_externals$Year.x >= 2016 | cps_wh_externals$Year.x <= 2020) & cps_wh_externals$region == "Shangh", ] %>% 
+  ggplot(data = ., aes(x = Periode, y = Baseline)) + 
+  # Punktwolke
+  geom_point(shape = 21, size = 1.5, colour = "blue") + 
+  # Glaettungsgerade fuer die Interpretation des Zusammenhangs
+  geom_smooth(se = FALSE, method = "auto")
 ```
 
-# Notiz. Vorhersagen fuer den gegebenen Zeitraum anzeigen mit dem Code:
-# ets_shangh$fitted
-
-
-7) Durchschnittliche Abweichung der Modellwerte zu den Originalwerten
+8) Bewerten Sie die Baseline fuer Ihren gewaehlten Warehousing‐Logistikdienstleister nach MAE und MAPE.Bewertungsrelevant: Output.
+Hinweis: Es bietet sich an, die Werte der Bewertungen in einem Dataframe ‘evaluation’ zu speichern.
 ```{r}
-# Durchschnittliche Abweichung mit  Mean Forecast Error (MFE) berechnen
-# Mittelwert(Urspruengliche Zeitreihe - Vorhersagen fuer den gegebenen Zeitraum) 
-MFE <- round(mean(as.numeric(ets_shangh$x - ets_shangh$fitted)), 4)
-MFE
+
 ```
-*Kommentar zu Aufgabe 7*
-Die Modellwerte weichen durchschnittlich um 8.8178 von den Originalwerten ab. 
-In unserem Unternehmen in der Data Analytics Abteilung rechnen wir mit der 
-Fehlerkennzahl Mean Forecast Error (MFE). Das MFE gibt den durchschnittlichen 
-Fehler unserer Modellwerte zu den Originalwerten an.
-Diese setzt sich aus drei verschiedenen Schritten. 
-1. Berechnung der Original-Nachfragewerte.
-2. Berechnung der Vorhersage fuer den gegebenen Zeitraum.
-3. Differenz aus 1. und 2. berechnen und den Mittelwert daraus bilden.
-Es gilt je naeher das MFE bei 0 ist, desto genauer ist die Vorhersage. 
 
-
-
-8) Nachfragevorhersage fuer ein weiteres Jahr. 
-
-*Vorbereitung zu Aufgabe 8 + Zusammenfassung der voherigen Aufgaben*
+9) Teilen Sie das Dataframe Ihres gewaehlten Warehousing‐Logistikdienstleisters in ein Trainings‐ (80%) und ein Test‐Set (20%) auf. Geben Sie von beiden den Tabellenkopf aus. Setzen Sie vorher den Seed 4141. Bewer‐ tungsrelevant: Code, Output.
 ```{r}
-# Datentyp umwandeln (typecast)
-demand_ts_shangh = ts(Demand$`Demand in Shangh`, frequency = 12)
 
-# Zeitreihenanalyse aus Aufgabe 6
-ets_shangh = ets(demand_ts_shangh, model = "ZZZ")
-
-# Forecast der Variable fcast_Shangh (fuer exponentielle Glaettung) uebergeben
-# Der Output zeigt die Forecast-Werte sowie die oberen und unteren Grenzen 
-# der 80% und 95% Konfidenzintervalle.
-fcast_Shangh = forecast(ets_shangh, 12)
 ```
 
-*1. DataFrame Original Nr. 1 erstellen*
+10) Wenden Sie die Forward Selection Variante der Wrapper Methode an (siehe Vorlesung). D.h. erstellen Sie zunaechst alle uni‐variaten Modelle, bewerten Sie diese Modelle und waehlen Sie das Modell mit der besten Bewertung aus. Erstellen Sie ‐ basierend auf dem besten Modell der ersten Iteration ‐ alle bi‐variaten Mod‐ elle (das Modell der vorherigen Wrapper‐Iteration wird jeweils um eine Variable erweitert), bewerten Sie diese Modelle und waehlen Sie das Modell mit der besten Bewertung aus. Fuehren Sie dies so lange fort, bis keine Verbesserung mehr erreicht wird. Nutzen Sie zur Modellierung die lineare Regression. Bewerten Sie die Mod‐ elle entsprechend nach MAE und MAPE sowie nach regressionsspezifischen Kennzahlen. Nutzen Sie nur die 5 externen Faktoren als Features, die Sie oben als am staerksten korrelierende externe Faktoren identifiziert haben. Kommentieren Sie Ihr Vorgehen zwischen den Iterationen. Bewertungsrelevant: Output, Vorgehen (einschliesslich Kommentare).
+
+Hinweis: Tritt eine starke Multikollinearität (“strong multicollinearity”) auf, so koennen Sie alle Mod‐ ellierungen mit der entsprechenden Variablen‐Kombination unter Bezug auf diesen Hinweis auslassen (siehe Vorlesungsinhalte zu Korrelation).
 ```{r}
-# DataFrame erstellen
-  df_Shangh_orig = data.frame(
-                   period = seq(1, length(fcast_Shangh$x), 1), 
-                   value = as.numeric(fcast_Shangh$x), 
-                   grp = rep("original", length(fcast_Shangh$x)))
+
 ```
 
-*2. DataFrame Vorhersage Nr. 2 erstellen*
+11) Bewerten Sie ihr Modell quantitativ im Vergleich mit der Baseline. Bewertungsrelevant: Output, Kommentar.
 ```{r}
-# DataFrame erstellen
-df_Shangh_fcast = data.frame(
-  period = seq(1, length(fcast_Shangh$fitted) + length(fcast_Shangh$mean), 1), 
-  value = c(as.numeric(fcast_Shangh$fitted), as.numeric(fcast_Shangh$mean)), 
-  grp = rep("fcast", length(fcast_Shangh$fitted) + length(fcast_Shangh$mean)))
+
 ```
 
-*3. Verbinden der DataFrames Nr. 1 und Nr. 2*
+12) Ihre Chefin kommt auf der Firmenfeier zu Ihnen und schlaegt Ihnen eine Wette vor. Sie sagt: “Ich wette mit Ihnen um 100 Euro, dass die IFR des oben betrachteten WH‐DL im naechsten Monat (Januar 2021) in allen Regionen ueber 0.85 sein wird.” Sollten Sie die Wette eingehen? Bewertungsrelevant: Output, Kommentar.
 ```{r}
-# Periode in YYYY-MM Format zu DataFrames hinzufügen
-df_Shangh_orig$period = Demand$Periode
-df_Shangh_fcast$period = Demand$Periode[Demand$Periode %like% "2020"] %>% gsub("2020", "2021", .) %>% c(Demand$Periode, .)
-
-# Verbinden der Data Frames
-df_EG = rbind(df_Shangh_orig, df_Shangh_fcast)
-
-# Anzeigen des DataFrame (ausgewaehlte Beobachtungen)
-df_EG
 
 ```
-*Schritt 4 - Visualisierung*
+
+##Entscheidung
+
+13) IhrRegressionsmodellsollimkommendenJahrimplementiertundlangfristigindieUnternehmensprozessein‐ tegriert werden. Beschreiben Sie, welche Nutzer und Prozesse davon profitieren koennten und in welcher Form die Loesung bereitgestellt werden koennte. Nehmen Sie ausserdem ausfuehrlich zur Phase der Datenbeschaf‐ fung Stellung. Bewertungsrelevant: Kommentar.
 ```{r}
-ggplot(data = df_EG, aes(x = period, 
-                         y = value, colour = grp, group= grp)) + 
-  geom_line() +
 
-  # Beschriftung von x-Achse 90 Grad umgedreht
-  theme(axis.text.x = element_text(angle=45, vjust = 0.5, size=6)) + 
-  xlab("Period") + 
-  ylab("Demand") + 
-  scale_colour_manual(breaks = c("fcast", "original"), values = c("green", "red")) +
-  
-  ggtitle(label = "Demand in Shanghai",
-              subtitle = "Original and Forecast from 2016 to 2021") + 
-  
-  # Periode in 3 Monatsabständen wiedergeben
-  scale_x_discrete(breaks = 
-                     df_Shangh_fcast$period[seq(1, length(df_Shangh_fcast$period), by = 3)])
 ```
-
-*Begruendung zu Aufgabe 8* 
-Um den Nachfrageverlauf sowie die Vorhersage am ubersichtlichsten
-zu visualisieren, haben wir uns fuer einen Liniendiagramm entschieden. 
-Die Linie der urspruenglichen Nachfrage haben wir in Kombination mit der
-Linie der Vorhersage in visualisierter Form uebereinander gelegt.
-Dies ermoeglicht uns den direkten Vergleich beider Modelle.
-Auf der x-Achse umfasst die urspruengliche Nachfrage die Perioden 0 bis 60, 
-wobei die Vorhersage der Nachfrage zusaetzlich ein weiteres Jahr umfasst, also 
-die Perioden 0 bis 72. 
-Auf der y-Achse findet sich die Anzahl der Nachfrage wieder, die wir jedoch
-von 13000 und 20000 eingeschreankt haben, um die Linien besser zu lesen.
-Hierbei wird der direkte Vergleich am deutlichsten indem die Farbe rot fuer die
-Vorhersage steht und blau fur die urspruengliche Nachfrage. Zudem koennen wir
-die Abstaende zwischen Tief- und Hochpunkt anhand der eingefaerbten Punkte 
-auf einem Liniendiagramm besser vergleichen als mit anderen Diagrammtypen.
-
-
-
-9) Bewerten Sie Ihr Modell aus Aufgabe 6 mit Hilfe von 4 verschiedenen 
-Fehler‐Kennzahlen, die Sie aus der Uebung kennen. 
-Welche der Fehler‐Kennzahlen halten Sie fuer geeignet, um die Guete des Modells 
-zu bewerten? Bewertungsrelevant: Output, Kommentar.
-
-### EG: (1) MFE
-```{r}
-# MFE
-MFE <-mean(as.numeric(ets_shangh$x - ets_shangh$fitted))
-```
-
-### EG: (2) MAE
-```{r}
-# MAE
-MAE <- mean(abs(as.numeric(ets_shangh$x - ets_shangh$fitted)))
-```
-
-### EG: (3) MSE
-```{r}
-# MSE
-MSE <- mean((as.numeric(ets_shangh$x - ets_shangh$fitted)^2))
-```
-
-### EG: (4) MAPE
-```{r}
-# MAPE
-MAPE <- mean(abs((as.numeric(ets_shangh$x - ets_shangh$fitted)/as.numeric(ets_shangh$x))*100))
-```
-```{r}
-cat("Es liegen folgende vier Fehlerkennzahlen vor. MFE betraegt", MFE,
-    ", MAE betreagt", MAE, ", MAE betreagt", MSE,
-    "und MAPE betreagt", MAPE)
-```
-
-*Kommentar zu Aufgabe 9*
-Wir halten die Fehlerkennzahl MFE und MAPE als geeignete Fehlerkennzahlen.
-MFE wuerde Sinn machen, da der durchschnittliche Fehler ersichtlich wird. Man
-erkennt in der Berechnung, wie sich die Abweichung von der vorigen Periode zur
-naechsten Periode verhealt.
-MAPE koennte man ebenfalls in Betracht ziehen, da uns die prozentuale Fehler-
-zahl bei der Auswertung helfen koennte. Hierbei ist darauf zu achten, dass keine
-große Abweichung des y-Wertes bzw. Nachfrage zur vorigen Periode vorliegt. 
-Zudem fokussieren sich viele Organisationen sich primaer auf MAPE,
-wenn es darum geht die Vorhersage Genauigkeit zu bestimmen.
-
-
-
-
-
-*CHECKS*
-10) Vergleich des Modells mit den Vermutungen aus Aufgabe 5. 
-
-*Kommentar zu Aufgabe 10*
-Beim Vergleich unseres voherigen Modells und den Vermutungen aus Aufgabe 5 
-koennen wir feststellen, dass sich der Zukunftstrend 
-in der Region Shanghai gegenueber dem urspruenglichen Trend sinkender Nachfrage 
-nur zum Teil bestaetigen laesst.
-So liegt die vorhergesagte Nachfrage in der 61. Periode im naechsten Jahr 
-bei 19054 nur wenig unter der urspruenglichen Nachfrage in der 1. Periode, die 
-bei 19129 lag. 
-Nimmt man jedoch Periode 1, 13, 15, 37 und 49 also immer den ersten Monat
-jeden Jahres in Betracht sieht man nur minimale Schwankungen zwischen der 
-niedrigsten Nachfrage bei 18908 in Periode 13 und der hoechsten Nachfrage der
-ersten Periode. Die Vorhersage sagt aus, dass wir keine signifikante Abweichung
-zu den Vorjahren haben und somit genuegend Nachfrage herrschen.
-Zudem erkennt man Saisonalitaeten bzw. ein wiederkehrendes Verhaltensmuster
-im urspruenglichen Modell und Vorhersage Modell. Es gibt kleine Schwankungen 
-zwischen beiden Modellen. 
-Allgemein erachten wir die Zeitreihenanalyse hier durchaus als sinnvoll, 
-da wir durch die historische Nachfrage als Indikator eine stabile 
-zukuenftige Nachfrage identifiziert haben. 
-Jedoch gilt es immer zu beruecksichtigen, dass die Vorhersagen immer eine 
-gewissen Ungenauigkeit haben.
-
-
-
-
-
-
-11) Erstellen Sie fuer die uebrigen Regionen ebenso Modelle zur Nachfragevorhersage (d.h. 4 weitere Modelle). 
-Nutzen Sie erneut die automatische Festlegung der Modellparameter (model = "ZZZ"). 
-Berechnen Sie zudem fuer jedes Modell den MAPE, um den Vergleich der Modelle zu ermoeglichen. 
-Nehmen Sie dazu Stellung, welches Modell laut der bewertenden Information das “beste” der vier Modelle sei. 
-
-```{r}
-#Modelle für die übrigen Regionen erstellen.
-ets_japan = ets(demand_ts_japan, model = "ZZZ")
-ets_peking = ets(demand_ts_peking, model = "ZZZ")
-ets_phlppn = ets(demand_ts_phlppn, model = "ZZZ")
-ets_skorea = ets(demand_ts_skorea, model = "ZZZ")
-
-#Funktion um MAPE zu berechnen
-mape <- function(actual,pred){
-           mape <- round(mean(abs((actual - pred)/actual))*100, 4)
-           return (mape) 
-}
-
-#MAPE ausgeben
-cat("Modell für Japan hat einen Wert für MAPE von", 
-    mape(demand_ts_japan, ets_japan$fitted),".\n")
-cat("Modell für Peking hat einen Wert für MAPE von",
-    mape(demand_ts_peking, ets_peking$fitted),".\n")
-cat("Modell für Phillipinen hat einen Wert für MAPE von", 
-    mape(demand_ts_phlppn, ets_phlppn$fitted),".\n")
-cat("Modell für Suedkorea hat einen Wert für MAPE von", 
-    mape(demand_ts_skorea, ets_skorea$fitted),".\n")
-```
-Kommentar zu Aufgabe 11: Der Mean Absolute Percentage Error (MAPE) zeigt
-durchschnittliche prozentuale Fehler im Hinblick auf die Vorhersagegenauigkeit
-der Modelle an. Allgemein gilt, dass MAPE die Vergleichbarkeit bei 
-unterschiedlicher Skalierung ermoeglicht und kleine Abweichungen 
-bei kleinem y stark gewertet werden.
-Wenn wir die vier Regionen Japan, Peking, Phillipinen und Suedkorea miteinander
-vergleichen, erkennen wir, dass die Region Phillipinen den kleinsten MAPE-Wert
-von 0.8036 hat. Beim MAPE-Vergleich gilt, dass je kleiner der prozentuale 
-Fehler desto besser ist die Vorhersage. Dies trifft auf die Region Phillipinen
-zu.
-
-
-
-
-## Abschluss
-
-12) Ihre Chefin kommt bei einer Firmenfeier auf Sie zu und schlaegt Ihnen eine 
-Wette vor. Sie sagt: “Ich wette mit Ihnen um 100 Euro, dass die Nachfrage nach 
-Limonade in Peking, den Philippinen und Suedkorea im naechsten Monat 
-(Januar 2021) in Summe 45.000 Flaschen nicht uebersteigen wird.” 
-Sollten Sie diese Wette eingehen? Bewertungsrelevant: Output, Kommentar.
-```{r}
-fcast_Peking = data.frame(forecast(ets_peking, 12))
-fcast_Philippinen = data.frame(forecast(ets_phlppn, 12))
-fcast_Suedkorea = data.frame(forecast(ets_skorea, 12))
-
-# Dataframe kombinieren und Summe von Sales für Peking, Philippinen und Südkorea
-SumRegion <- rbind(fcast_Peking + fcast_Philippinen + fcast_Suedkorea)
-
-# Tabellenkopf erste Zeile bzw. Januar 2021 von forecast ausgeben
-head(SumRegion, 1)
-```
-Kommentar zu Aufgabe 12: Der Output zeigt die Forecast-Werte sowie die oberen 
-und unteren Grenzen der 80% und 95% Konfidenzintervalle an. Wir gehen die Wette 
-ein, da wir mit 95%iger Sicherheit sagen koennen, dass die Nachfrage nach 
-Limonade in Peking, den Philippinen und Suedkorea im naechsten Monat in der 
-Summe ca. bei 48422 liegen wird. Somit uebersteigt die Nachfrage nach Limonade 
-um 3422 Limonadeflaschen und haetten die Wette mit 95%iger Sicherheit gewonnen.
-Es gilt jedoch immer eine gewisse Unersicherheit, da wir nicht 100% sagen 
-koennen, ob die Nachfrage nach ueber 45.000 Limoadenflaschen uebersteigt.
-
-
-
-13) Ihr guter Freund Olaf wohnt in Shanghai und besitzt dort drei der 
-Supermaerkte, die Ihre Limonaden‐Marke fuehren. Er wuerde gern wissen, wie viel 
-Limonade er im ersten Quartal von 2021 wahrscheinlich bestellen muss. 
-Helfen Sie Olaf. Bewertungsrelevant: Output, Kommentar.
-```{r}
-# (1) Datenbereinigen: Nur Produkt Gruppe105 in der Region Shanghai 
-DemandShanghai = subset(transactions, Product == "Gruppe105" & 
-                                      region=="Shangh" &
-                                      Sales > 0)
-DemandShanghai <- unique(DemandShanghai)
-
-# (2) Aggregieren
-DemandShanghai = aggregate(Sales ~ Periode, data = DemandShanghai, sum)
-
-# (3) Erstellen der Zeitreihe
-ts_Shanghai = ts(DemandShanghai$Sales, frequency = 12)
-
-# (4) Modell erstellen
-m1_Shanghai = ets(ts_Shanghai, model="ZZZ")
-
-# Die Vorhersage Nachfrage bezieht sich auf 5 Gescheafte. 
-fcast1_Shanghai = data.frame(forecast(m1_Shanghai, 12))
-
-# Da Olaf nur 3 Geschaefte hat, muessen wir die Anzahl anpassen und runden
-fcast1_Shanghai <- round((fcast1_Shanghai[1]/5)*3,2)
-
-# Spaltenname aendern
-colnames(fcast1_Shanghai) = c("Demand Forecast Q1")
-
-# Zeilennamen in richtem Perioden YYYY-MM Format hinzufügen
-rownames(fcast1_Shanghai) = Demand$Periode[Demand$Periode %like% "2020"] %>% gsub("2020", "2021", .)
-
-# 3 Monate bzw. ein Quartal anzeigen
-head(fcast1_Shanghai, 3)
-
-#TODO Konfidenzintervall
-```
-Kommentar zu Aufgabe 13: Anhand unseres Vorhersagemodells basierend auf den
-Vergangenheitsdaten der Nachfrage in Shanghai empfehlen wir unseren Freund Olaf 
-im ersten Quartal in Januar 1681 Limonaden-Flaschen zu kaufen sowie im Februar 
-1699 und im Maerz 1511 Limonaden-Flaschen. Hier gilt es insbesondere zu 
-beruecksichtigen, dass die alte Vorhersage alle fuenf Geschaefte und ihre Nach-
-fragemenge umfasse, daher haben wir die Anzahl der Nachfrage auf die Anzahl
-der drei Supermaerkte reduziert, die Olaf besitzt.
-
-
 
 
 
