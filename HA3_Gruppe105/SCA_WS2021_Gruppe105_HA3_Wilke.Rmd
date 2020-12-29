@@ -17,13 +17,18 @@ library("GGally")
 #library("data.table")
 ```
 
-1) Laden Sie die Datensaetze externals und services. Berechnen Sie ueber den gesamten Datensatz services, d.h. fuer jede durchgefuehrte Dienstleistung, den On‐Time‐Delivery (OTD) Status (d.h. 0 oder FALSE, wenn unpuenktlich; 1 oder TRUE wenn puenktlich) sowie die Item Fill Rate (IFR). Stellen Sie an‐ schliessend jeweils die Kennzahlen der durchschnittlichen OTD‐Rate und der durchschnittlichen Item Fill Rate als Kennzahl je Logistikdienstleister aggregiert dar. Geben Sie diese Werte in zwei Tabellen aus. Die Tabellen sollen einen einfachen Vergleich der LDL ermöglichen. Bewertungsrelevant: Output, Code.
-Hinweis: Erneut bietet es sich an, eine Variable Periode dem Datensatz hinzu zu fuegen, welche aus Jahr und Monat besteht (im Format YYYYMM, z.B. Februar 2014 –> 201402)
 ```{r}
 #Daten einlesen.
 externals = read.csv2("externals10.csv")
 services = read.csv2("output_services_8Players_v0010.csv")
+```
 
+## Daten fuer die Modellierung vorbereiten
+
+### Aufgabe 1: OTD und IFR nach berechnen
+1) Laden Sie die Datensaetze externals und services. Berechnen Sie ueber den gesamten Datensatz services, d.h. fuer jede durchgefuehrte Dienstleistung, den On‐Time‐Delivery (OTD) Status (d.h. 0 oder FALSE, wenn unpuenktlich; 1 oder TRUE wenn puenktlich) sowie die Item Fill Rate (IFR). Stellen Sie an‐ schliessend jeweils die Kennzahlen der durchschnittlichen OTD‐Rate und der durchschnittlichen Item Fill Rate als Kennzahl je Logistikdienstleister aggregiert dar. Geben Sie diese Werte in zwei Tabellen aus. Die Tabellen sollen einen einfachen Vergleich der LDL ermöglichen. Bewertungsrelevant: Output, Code.
+Hinweis: Erneut bietet es sich an, eine Variable Periode dem Datensatz hinzu zu fuegen, welche aus Jahr und Monat besteht (im Format YYYYMM, z.B. Februar 2014 –> 201402)
+```{r}
 #OTD und IFR berechnen.
 services$OTD = services$DaysScheduled >= services$DaysExecuted
 services$IFR = services$QExecuted / services$QScheduled
@@ -36,9 +41,9 @@ mean_IFR_vendor = services %>% aggregate(IFR ~ vendor, data = ., mean)
 mean_OTD_vendor = mean_OTD_vendor[order(-mean_OTD_vendor$OTD),]
 mean_IFR_vendor = mean_IFR_vendor[order(-mean_IFR_vendor$IFR),]
 
-# Auf die 2. Nachkommastelle runden
-mean_OTD_vendor[2] = round(mean_OTD_vendor$OTD, 2) 
-mean_IFR_vendor[2] = round(mean_IFR_vendor$IFR, 2)
+# Auf die 4. Nachkommastelle runden
+mean_OTD_vendor[2] = round(mean_OTD_vendor$OTD, 4) 
+mean_IFR_vendor[2] = round(mean_IFR_vendor$IFR, 4)
 
 # DataFrame anzeigen
 mean_OTD_vendor
