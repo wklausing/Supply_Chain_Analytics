@@ -33,11 +33,16 @@ mean_OTD_vendor = services %>% aggregate(OTD ~ vendor, data = ., mean)
 mean_IFR_vendor = services %>% aggregate(IFR ~ vendor, data = ., mean)
 
 #Darstellung
-mean_OTD_vendor[order(-mean_OTD_vendor$OTD),]
-mean_IFR_vendor[order(-mean_IFR_vendor$IFR),]
+mean_OTD_vendor = mean_OTD_vendor[order(-mean_OTD_vendor$OTD),]
+mean_IFR_vendor = mean_IFR_vendor[order(-mean_IFR_vendor$IFR),]
 
-#Erstellen von Periode-Variable
-services$Periode = sprintf("%02d%02d", services$Year, services$Month)
+# Auf die 2. Nachkommastelle runden
+mean_OTD_vendor[2] = round(mean_OTD_vendor$OTD, 2) 
+mean_IFR_vendor[2] = round(mean_IFR_vendor$IFR, 2)
+
+# DataFrame anzeigen
+mean_OTD_vendor
+mean_IFR_vendor
 
 ```
 
