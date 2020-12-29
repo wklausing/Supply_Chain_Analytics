@@ -63,10 +63,11 @@ wdl = services[services$service == "Warehousing",] %>% aggregate(IFR ~ vendor+re
 # Nur Japan und Periode 2020/12
 wdl_japan_202012 = wdl[wdl$region == "Japan" & wdl$Periode == "202012",]
 
+# IFR runden auf vierte Stelle
+wdl_japan_202012[4] = round(wdl_japan_202012$IFR, 4)
+
 # Darstellung
 wdl_japan_202012[order(-wdl_japan_202012$IFR),]
-
-#TODO IFR runden auf vierte Stelle
 ```
 
 3) Erzeugen Sie ein neues Dataframe, welches die aggregierte OTD je Shipping‐Logistikdienstleister enthaelt. Die OTD soll je LDL (nur Shipping), Region und Periode (eine Periode = ein Monat eines einzelnen Jahres) aggregiert werden. Geben Sie anschliessend eine Tabelle aus, die den einfachen Vergleich der Shipping‐DL fuer die Periode 2020/12 in Japan ermoeglicht. Bewertungsrelevant: Output, Code.
