@@ -78,10 +78,11 @@ sdl = services[services$service == "Shipping",] %>% aggregate(OTD ~ vendor+regio
 # Nur Japan und Periode 2020/12
 sdl_japan_202012 = sdl[sdl$region == "Japan" & sdl$Periode == "202012",]
 
+#OTD runden auf vierte Stelle
+sdl_japan_202012[4] = round(sdl_japan_202012$OTD, 4)
+
 # Darstellung 
 sdl_japan_202012[order(-sdl_japan_202012$OTD),]
-
-#TODO OTD runden auf vierte Stelle
 ```
 
 ##Modellierung: Warehousing
