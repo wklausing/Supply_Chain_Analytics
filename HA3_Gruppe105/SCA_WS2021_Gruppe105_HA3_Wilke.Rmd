@@ -48,8 +48,12 @@ mean_IFR_vendor[2] = round(mean_IFR_vendor$IFR, 4)
 # DataFrame anzeigen
 mean_OTD_vendor
 mean_IFR_vendor
-
 ```
+```{r}
+#Erstellen von Periode-Variable
+services$Periode = sprintf("%02d%02d", services$Year, services$Month)
+```
+
 
 2) Erzeugen Sie ein neues Dataframe, welches die aggregierte IFR je Warehousing‐Logistikdienstleister enthaelt. Die IFR soll je LDL (nur Warehousing), Region und Periode (eine Periode = ein Monat eines einzelnen Jahres) aggregiert werden. Geben Sie anschliessend eine Tabelle aus, die den einfachen Vergleich der WH‐DL fuer die Periode 2020/12 in Japan ermoeglicht. Bewertungsrelevant: Output, Code.
 ```{r}
