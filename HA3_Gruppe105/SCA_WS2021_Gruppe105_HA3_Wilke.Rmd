@@ -130,6 +130,34 @@ ggpairs(cps_wh_externals[, c("AvgHealth", "InternetStability", "BusinessConfiden
         lower = list(continuous = wrap("smooth_loess", colour = "steelblue1")))
 ```
 
+*Zweiter Corr-Plot Vorschlag*
+Quelle: https://rpubs.com/melike/corrplot
+```{r}
+library(corrplot)
+
+# Matrix festlegen
+M <- cps_wh_externals[, c("AvgHealth", "InternetStability", "BusinessConfidence", "ParkingSpaceAvailability", "Congestion")]
+
+
+# CorrPlot gestalten
+corrplot(corr_matrix, title = "Correlation Plot", method = "color", 
+         outline = T, addgrid.col = "darkgray", 
+         order="hclust", 
+         addrect = 5,        # Nummer der Rechtecke, wir haben 5 ext Faktoren
+         rect.col = "black", # rectangles (Rechtecke Farbe)
+         rect.lwd = 3,       # Groeße der Rechtecke
+         cl.pos = "r",          # ColourLegend Position (b = below, r = right)
+         tl.col = "indianred4", # Farbe fuer Achsenbeschriftung
+         
+# Text: tl (TextLabel), cl (ColourLegend)
+tl.cex = 0.4, cl.cex = 0.4, addCoef.col = "white", 
+
+# Zahlen: Nachkommastelle und Groeße
+number.digits = 2, number.cex = 0.6, 
+col = colorRampPalette(c("darkred","white","darkgreen"))(100))
+```
+
+
 6) Sie moechten nun eine Lineare Regression durchfuehren, um die IFR mit Hilfe der externen Effekte vorherzusagen. Um die Guete Ihrer Modelle vergleichen zu koennen, benoetigen Sie eine geeignete Baseline. Erzeugen Sie eine sinnvolle Baseline in dem DataFrame zu Ihrem gewaehlten Warehousing‐DL in einer Variable Baseline. Begruenden Sie Ihre Wahl. Geben Sie von dem DataFrame den Tabellenkopf aus. Geben Sie Sie nur die Spalten ‘Periode’, ‘Region’, ‘IFR’ und ‘Baseline’ aus. Bewertungsrelevant: Output, Begruendung.
 ```{r}
 # Baseline ist durschnittlicher IFR vom Monat.
