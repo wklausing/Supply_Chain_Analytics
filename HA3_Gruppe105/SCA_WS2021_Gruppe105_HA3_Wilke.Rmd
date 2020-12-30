@@ -199,7 +199,25 @@ ggplot(data = df_EG, aes(x = period, y = value, group = 1 , color = grp)) +
 8) Bewerten Sie die Baseline fuer Ihren gewaehlten Warehousing‐Logistikdienstleister nach MAE und MAPE.Bewertungsrelevant: Output.
 Hinweis: Es bietet sich an, die Werte der Bewertungen in einem Dataframe ‘evaluation’ zu speichern.
 ```{r}
+# DataFrame erzeugen, dass bei auf die Beschreibung ("Model") leer bzw. 0 ist
+evaluation = data.frame(Model = "Baseline",
+                        MAE = numeric(1),
+                        sMAPE = numeric(1))
 
+# MAE berechnen
+evaluation[evaluation$Model == "Baseline",]$MAE = 
+mean(abs(cps_wh_externals_baseline$IFR - cps_wh_externals_baseline$BaselineIFR))
+
+# sMAPE berechnen
+evaluation[evaluation$Model == "Baseline",]$sMAPE = 
+smape(cps_wh_externals_baseline$IFR, cps_wh_externals_baseline$BaselineIFR)
+
+# MAE und sMAPE auf vierte Nachkommastelle runden
+evaluation[2] = round(evaluation$MAE,4)
+evaluation[3] = round(evaluation$sMAPE,4)
+
+# DataFrame anzeigen
+evaluation
 ```
 
 9) Teilen Sie das Dataframe Ihres gewaehlten Warehousing‐Logistikdienstleisters in ein Trainings‐ (80%) und ein Test‐Set (20%) auf. Geben Sie von beiden den Tabellenkopf aus. Setzen Sie vorher den Seed 4141. Bewer‐ tungsrelevant: Code, Output.
