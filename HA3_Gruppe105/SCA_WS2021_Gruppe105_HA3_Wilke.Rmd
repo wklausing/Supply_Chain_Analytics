@@ -145,17 +145,23 @@ cps_wh_externals[, c("Periode", "region", "IFR.x", "Baseline")] %>% head()
 
 *Aufgabe 6 zweiter Vorschlag*
 ```{r}
-# Baseline ist durschnittlicher IFR vom Monat.
-#cps_wh_externals = cps_wh_externals %>% aggregate(IFR ~ Periode, data = ., mean) %>% merge(cps_wh_externals, ., by = c("Periode"))
-
+# Baseline ist durschnittlicher IFR vom Monat
 Baseline = data.frame(aggregate(IFR ~ Periode, data = cps_wh_externals, mean))
 
-# Tabelle umbenennen
+# Spalte umbenennen
 colnames(Baseline) = c("Periode", "BaselineIFR")
 
-# Kopf anzeigen
-head(Baseline)
+# Merge der Baseline Tabelle und alten DataFrame
+cps_wh_externals_baseline = merge(Baseline, cps_wh_externals, by=c("Periode"))
+
+# BaselineIFR und IFR auf vierte Nachkommastelle runden
+cps_wh_externals_baseline[2] = round(cps_wh_externals_baseline$BaselineIFR, 4)
+cps_wh_externals_baseline[17] = round(cps_wh_externals_baseline$IFR, 4)
+
+# ‘Periode’, ‘Region’, ‘IFR’ und ‘Baseline’ anzeigen
+head(cps_wh_externals_baseline[c(1, 3, 17, 2)])
 ```
+
 
 
 7) Visualisieren Sie die Baseline Ihres gewaehlten LDL fuer den Zeitraum von 2016 bis 2020 sowie die IFR in der Region Shanghai. Bewertungsrelevant: Output.
