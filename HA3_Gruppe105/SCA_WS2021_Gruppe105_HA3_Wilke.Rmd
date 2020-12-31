@@ -17,13 +17,18 @@ library("GGally")
 #library("data.table")
 ```
 
-1) Laden Sie die Datensaetze externals und services. Berechnen Sie ueber den gesamten Datensatz services, d.h. fuer jede durchgefuehrte Dienstleistung, den On‐Time‐Delivery (OTD) Status (d.h. 0 oder FALSE, wenn unpuenktlich; 1 oder TRUE wenn puenktlich) sowie die Item Fill Rate (IFR). Stellen Sie an‐ schliessend jeweils die Kennzahlen der durchschnittlichen OTD‐Rate und der durchschnittlichen Item Fill Rate als Kennzahl je Logistikdienstleister aggregiert dar. Geben Sie diese Werte in zwei Tabellen aus. Die Tabellen sollen einen einfachen Vergleich der LDL ermöglichen. Bewertungsrelevant: Output, Code.
-Hinweis: Erneut bietet es sich an, eine Variable Periode dem Datensatz hinzu zu fuegen, welche aus Jahr und Monat besteht (im Format YYYYMM, z.B. Februar 2014 –> 201402)
 ```{r}
 #Daten einlesen.
 externals = read.csv2("externals10.csv")
 services = read.csv2("output_services_8Players_v0010.csv")
+```
 
+## Daten fuer die Modellierung vorbereiten
+
+### Aufgabe 1: OTD und IFR nach berechnen
+1) Laden Sie die Datensaetze externals und services. Berechnen Sie ueber den gesamten Datensatz services, d.h. fuer jede durchgefuehrte Dienstleistung, den On‐Time‐Delivery (OTD) Status (d.h. 0 oder FALSE, wenn unpuenktlich; 1 oder TRUE wenn puenktlich) sowie die Item Fill Rate (IFR). Stellen Sie an‐ schliessend jeweils die Kennzahlen der durchschnittlichen OTD‐Rate und der durchschnittlichen Item Fill Rate als Kennzahl je Logistikdienstleister aggregiert dar. Geben Sie diese Werte in zwei Tabellen aus. Die Tabellen sollen einen einfachen Vergleich der LDL ermöglichen. Bewertungsrelevant: Output, Code.
+Hinweis: Erneut bietet es sich an, eine Variable Periode dem Datensatz hinzu zu fuegen, welche aus Jahr und Monat besteht (im Format YYYYMM, z.B. Februar 2014 –> 201402)
+```{r}
 #OTD und IFR berechnen.
 services$OTD = services$DaysScheduled >= services$DaysExecuted
 services$IFR = services$QExecuted / services$QScheduled
@@ -33,13 +38,22 @@ mean_OTD_vendor = services %>% aggregate(OTD ~ vendor, data = ., mean)
 mean_IFR_vendor = services %>% aggregate(IFR ~ vendor, data = ., mean)
 
 #Darstellung
-mean_OTD_vendor[order(-mean_OTD_vendor$OTD),]
-mean_IFR_vendor[order(-mean_IFR_vendor$IFR),]
+mean_OTD_vendor = mean_OTD_vendor[order(-mean_OTD_vendor$OTD),]
+mean_IFR_vendor = mean_IFR_vendor[order(-mean_IFR_vendor$IFR),]
 
+# Auf die 4. Nachkommastelle runden
+mean_OTD_vendor[2] = round(mean_OTD_vendor$OTD, 4) 
+mean_IFR_vendor[2] = round(mean_IFR_vendor$IFR, 4)
+
+# DataFrame anzeigen
+mean_OTD_vendor
+mean_IFR_vendor
+```
+```{r}
 #Erstellen von Periode-Variable
 services$Periode = sprintf("%02d%02d", services$Year, services$Month)
-
 ```
+
 
 2) Erzeugen Sie ein neues Dataframe, welches die aggregierte IFR je Warehousing‐Logistikdienstleister enthaelt. Die IFR soll je LDL (nur Warehousing), Region und Periode (eine Periode = ein Monat eines einzelnen Jahres) aggregiert werden. Geben Sie anschliessend eine Tabelle aus, die den einfachen Vergleich der WH‐DL fuer die Periode 2020/12 in Japan ermoeglicht. Bewertungsrelevant: Output, Code.
 ```{r}
@@ -49,10 +63,11 @@ wdl = services[services$service == "Warehousing",] %>% aggregate(IFR ~ vendor+re
 # Nur Japan und Periode 2020/12
 wdl_japan_202012 = wdl[wdl$region == "Japan" & wdl$Periode == "202012",]
 
+# IFR runden auf vierte Stelle
+wdl_japan_202012[4] = round(wdl_japan_202012$IFR, 4)
+
 # Darstellung
 wdl_japan_202012[order(-wdl_japan_202012$IFR),]
-
-#TODO IFR runden auf vierte Stelle
 ```
 
 3) Erzeugen Sie ein neues Dataframe, welches die aggregierte OTD je Shipping‐Logistikdienstleister enthaelt. Die OTD soll je LDL (nur Shipping), Region und Periode (eine Periode = ein Monat eines einzelnen Jahres) aggregiert werden. Geben Sie anschliessend eine Tabelle aus, die den einfachen Vergleich der Shipping‐DL fuer die Periode 2020/12 in Japan ermoeglicht. Bewertungsrelevant: Output, Code.
@@ -63,10 +78,11 @@ sdl = services[services$service == "Shipping",] %>% aggregate(OTD ~ vendor+regio
 # Nur Japan und Periode 2020/12
 sdl_japan_202012 = sdl[sdl$region == "Japan" & sdl$Periode == "202012",]
 
+#OTD runden auf vierte Stelle
+sdl_japan_202012[4] = round(sdl_japan_202012$OTD, 4)
+
 # Darstellung 
 sdl_japan_202012[order(-sdl_japan_202012$OTD),]
-
-#TODO OTD runden auf vierte Stelle
 ```
 
 ##Modellierung: Warehousing
@@ -114,6 +130,7 @@ ggpairs(cps_wh_externals[, c("AvgHealth", "InternetStability", "BusinessConfiden
         lower = list(continuous = wrap("smooth_loess", colour = "steelblue1")))
 ```
 
+
 6) Sie moechten nun eine Lineare Regression durchfuehren, um die IFR mit Hilfe der externen Effekte vorherzusagen. Um die Guete Ihrer Modelle vergleichen zu koennen, benoetigen Sie eine geeignete Baseline. Erzeugen Sie eine sinnvolle Baseline in dem DataFrame zu Ihrem gewaehlten Warehousing‐DL in einer Variable Baseline. Begruenden Sie Ihre Wahl. Geben Sie von dem DataFrame den Tabellenkopf aus. Geben Sie Sie nur die Spalten ‘Periode’, ‘Region’, ‘IFR’ und ‘Baseline’ aus. Bewertungsrelevant: Output, Begruendung.
 ```{r}
 # Baseline ist durschnittlicher IFR vom Monat.
@@ -125,6 +142,27 @@ colnames(cps_wh_externals)[43] = "Baseline"
 # Tabellenkopf ausgeben.
 cps_wh_externals[, c("Periode", "region", "IFR.x", "Baseline")] %>% head()
 ```
+
+*Aufgabe 6 zweiter Vorschlag*
+```{r}
+# Baseline ist durschnittlicher IFR vom Monat
+Baseline = data.frame(aggregate(IFR ~ Periode, data = cps_wh_externals, mean))
+
+# Spalte umbenennen
+colnames(Baseline) = c("Periode", "BaselineIFR")
+
+# Merge der Baseline Tabelle und alten DataFrame
+cps_wh_externals_baseline = merge(Baseline, cps_wh_externals, by=c("Periode"))
+
+# BaselineIFR und IFR auf vierte Nachkommastelle runden
+cps_wh_externals_baseline[2] = round(cps_wh_externals_baseline$BaselineIFR, 4)
+cps_wh_externals_baseline[17] = round(cps_wh_externals_baseline$IFR, 4)
+
+# ‘Periode’, ‘Region’, ‘IFR’ und ‘Baseline’ anzeigen
+head(cps_wh_externals_baseline[c(1, 3, 17, 2)])
+```
+
+
 
 7) Visualisieren Sie die Baseline Ihres gewaehlten LDL fuer den Zeitraum von 2016 bis 2020 sowie die IFR in der Region Shanghai. Bewertungsrelevant: Output.
 ```{r}
@@ -161,7 +199,25 @@ ggplot(data = df_EG, aes(x = period, y = value, group = 1 , color = grp)) +
 8) Bewerten Sie die Baseline fuer Ihren gewaehlten Warehousing‐Logistikdienstleister nach MAE und MAPE.Bewertungsrelevant: Output.
 Hinweis: Es bietet sich an, die Werte der Bewertungen in einem Dataframe ‘evaluation’ zu speichern.
 ```{r}
+# DataFrame erzeugen, dass bei auf die Beschreibung ("Model") leer bzw. 0 ist
+evaluation = data.frame(Model = "Baseline",
+                        MAE = numeric(1),
+                        sMAPE = numeric(1))
 
+# MAE berechnen
+evaluation[evaluation$Model == "Baseline",]$MAE = 
+mean(abs(cps_wh_externals_baseline$IFR - cps_wh_externals_baseline$BaselineIFR))
+
+# sMAPE berechnen
+evaluation[evaluation$Model == "Baseline",]$sMAPE = 
+smape(cps_wh_externals_baseline$IFR, cps_wh_externals_baseline$BaselineIFR)
+
+# MAE und sMAPE auf vierte Nachkommastelle runden
+evaluation[2] = round(evaluation$MAE,4)
+evaluation[3] = round(evaluation$sMAPE,4)
+
+# DataFrame anzeigen
+evaluation
 ```
 
 9) Teilen Sie das Dataframe Ihres gewaehlten Warehousing‐Logistikdienstleisters in ein Trainings‐ (80%) und ein Test‐Set (20%) auf. Geben Sie von beiden den Tabellenkopf aus. Setzen Sie vorher den Seed 4141. Bewer‐ tungsrelevant: Code, Output.
