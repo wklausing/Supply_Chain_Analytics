@@ -221,8 +221,22 @@ evaluation
 ```
 
 9) Teilen Sie das Dataframe Ihres gewaehlten Warehousing‐Logistikdienstleisters in ein Trainings‐ (80%) und ein Test‐Set (20%) auf. Geben Sie von beiden den Tabellenkopf aus. Setzen Sie vorher den Seed 4141. Bewer‐ tungsrelevant: Code, Output.
+*Gegenmassnahme zum Overfitting: Aufteilung in Trainings- & Test-Data Set*
 ```{r}
+# Einen zufaelligen Zustand herstellen (der jedoch kontrolliert erstellt wird und daher wiederholbar ist)
+set.seed(4141)
 
+# eine Zufallsaufwahl erstellen: Aus der Liste von Zahlen 1 bis Laenge von cps_wh_externals werden 80% gewaehlt
+zufall = sample(1:nrow(cps_wh_externals), nrow(cps_wh_externals) * 0.8)
+
+# Die Eintraege in der Zufallsauswahl gehen in das TrainingsSet
+cps_wh_externalsTraining = cps_wh_externals[zufall, ]
+
+# Die Eintraege nicht in der Zufallsauswahl gehen in das TestSet
+cps_wh_externalsTest = cps_wh_externals[-zufall, ]
+
+#Tabellenkopf ausgeben
+head(cps_wh_externalsTest)
 ```
 
 10) Wenden Sie die Forward Selection Variante der Wrapper Methode an (siehe Vorlesung). D.h. erstellen Sie zunaechst alle uni‐variaten Modelle, bewerten Sie diese Modelle und waehlen Sie das Modell mit der besten Bewertung aus. Erstellen Sie ‐ basierend auf dem besten Modell der ersten Iteration ‐ alle bi‐variaten Mod‐ elle (das Modell der vorherigen Wrapper‐Iteration wird jeweils um eine Variable erweitert), bewerten Sie diese Modelle und waehlen Sie das Modell mit der besten Bewertung aus. Fuehren Sie dies so lange fort, bis keine Verbesserung mehr erreicht wird. Nutzen Sie zur Modellierung die lineare Regression. Bewerten Sie die Mod‐ elle entsprechend nach MAE und MAPE sowie nach regressionsspezifischen Kennzahlen. Nutzen Sie nur die 5 externen Faktoren als Features, die Sie oben als am staerksten korrelierende externe Faktoren identifiziert haben. Kommentieren Sie Ihr Vorgehen zwischen den Iterationen. Bewertungsrelevant: Output, Vorgehen (einschliesslich Kommentare).
