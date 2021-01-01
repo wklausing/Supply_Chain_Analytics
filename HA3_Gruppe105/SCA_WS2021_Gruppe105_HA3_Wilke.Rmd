@@ -242,12 +242,16 @@ cps_wh_externalsTest = cps_wh_externals[-zufall, ]
 head(cps_wh_externalsTest)
 ```
 
-10) Wenden Sie die Forward Selection Variante der Wrapper Methode an (siehe Vorlesung). D.h. erstellen Sie zunaechst alle uni‐variaten Modelle, bewerten Sie diese Modelle und waehlen Sie das Modell mit der besten Bewertung aus. Erstellen Sie ‐ basierend auf dem besten Modell der ersten Iteration ‐ alle bi‐variaten Mod‐ elle (das Modell der vorherigen Wrapper‐Iteration wird jeweils um eine Variable erweitert), bewerten Sie diese Modelle und waehlen Sie das Modell mit der besten Bewertung aus. Fuehren Sie dies so lange fort, bis keine Verbesserung mehr erreicht wird. Nutzen Sie zur Modellierung die lineare Regression. Bewerten Sie die Mod‐ elle entsprechend nach MAE und MAPE sowie nach regressionsspezifischen Kennzahlen. Nutzen Sie nur die 5 externen Faktoren als Features, die Sie oben als am staerksten korrelierende externe Faktoren identifiziert haben. Kommentieren Sie Ihr Vorgehen zwischen den Iterationen. Bewertungsrelevant: Output, Vorgehen (einschliesslich Kommentare).
-
+### Aufgabe 10: 
+(1) Wenden Sie die Forward Selection Variante der Wrapper Methode an (siehe Vorlesung). 
+D.h. erstellen Sie zunaechst alle uni‐variaten Modelle, bewerten Sie diese Modelle und waehlen Sie das Modell mit der besten Bewertung aus. 
+(2) Erstellen Sie ‐ basierend auf dem besten Modell der ersten Iteration ‐ alle bi‐variaten Modelle (das Modell der vorherigen Wrapper‐Iteration wird jeweils um eine Variable erweitert), bewerten Sie diese Modelle und waehlen Sie das Modell mit der besten Bewertung aus. Fuehren Sie dies so lange fort, bis keine Verbesserung mehr erreicht wird. Nutzen Sie zur Modellierung die lineare Regression. 
+Bewerten Sie die Modelle entsprechend nach MAE und MAPE sowie nach regressionsspezifischen Kennzahlen. 
+Nutzen Sie nur die 5 externen Faktoren als Features, die Sie oben als am staerksten korrelierende externe Faktoren identifiziert haben. Kommentieren Sie Ihr Vorgehen zwischen den Iterationen. 
+Bewertungsrelevant: Output, Vorgehen (einschliesslich Kommentare).
 Hinweis: Tritt eine starke Multikollinearität (“strong multicollinearity”) auf, so koennen Sie alle Mod‐ ellierungen mit der entsprechenden Variablen‐Kombination unter Bezug auf diesen Hinweis auslassen (siehe Vorlesungsinhalte zu Korrelation).
-*Fragen:*
-*Baseline DataFrame verwenden oder normale cps_wh_externals DataFrame?*
-### (1) Modelle erstellen
+*Fragen: Baseline DataFrame verwenden oder normale cps_wh_externals DataFrame?*
+### (1.1) Modelle erstellen
 ```{r echo=FALSE}
 # Modelle erstellen mit untransformierter unabhaengiger Variable
 # Wir betrachten jeweils nur ein Merkmal (univariater Datenanalyse)
@@ -264,40 +268,50 @@ Hinweis: Tritt eine starke Multikollinearität (“strong multicollinearity”) 
   summary(m1_4)
   summary(m1_5)
 ```
-### (2) Bewertung der Modelle
+
+
+### (1.2) Bewertung des besten Modells
 (1) Residuenplots 
 ```{r}
 #Residuenplot Modell 1 (Variable AvgHealth)
-ggplot(data = NULL, aes(x = m1_1$model$AvgHealth, y = m1_1$model$AvgHealth )) + 
-  geom_point()
-
-#Residuenplot Modell 2
-ggplot(data = NULL, aes(x = m1_2$model$InternetStability, y = m1_2$model$InternetStability)) + 
+ggplot(data = NULL, aes(x = m1_1$model$AvgHealth, y = m1_1$residuals)) + 
   geom_point() + 
-  geom_smooth(method = loess)
+  geom_smooth(se = FALSE, method = loess)
 
-#Residuenplot Modell 3
-ggplot(data = NULL, aes(x = m1_3$model$BusinessConfidence, y = m1_3$model$BusinessConfidence)) + 
+#Residuenplot Modell 2 (Variable InternetStability)
+ggplot(data = NULL, aes(x = m1_2$model$InternetStability, y = m1_2$residuals)) + 
   geom_point() + 
-  geom_smooth(method = loess)
+  geom_smooth(se = FALSE, method = loess)
 
-#Residuenplot Modell 4
-ggplot(data = NULL, aes(x = m1_4$model$ParkingSpaceAvailability, y = m1_4$model$ParkingSpaceAvailability)) + 
+#Residuenplot Modell 3 (Variable BusinessConfidence)
+ggplot(data = NULL, aes(x = m1_3$model$BusinessConfidence, y = m1_3$residuals)) + 
   geom_point() + 
-  geom_smooth(method = loess)
+  geom_smooth(se = FALSE, method = loess)
 
-#Residuenplot Modell 5
-ggplot(data = NULL, aes(x = m1_5$model$Congestion, y = m1_5$model$Congestion)) + 
+#Residuenplot Modell 4 (Variable ParkingSpaceAvailability)
+ggplot(data = NULL, aes(x = m1_4$model$ParkingSpaceAvailability, y = m1_4$residuals)) + 
   geom_point() + 
-  geom_smooth(method = loess)
+  geom_smooth(se = FALSE, method = loess)
+
+#Residuenplot Modell 5 (Variable Congestion)
+ggplot(data = NULL, aes(x = m1_5$model$Congestion, y = m1_5$residuals)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE, method = loess)
 ```
+**Bewertung und Auswahl Begruendung:** 
+Wir nehmen ParkingSpaceAvailability, da das Residual standard error bei 0.01253
+liegt und somit die hoechste Wahrscheinlichkeit im Vergleich zu den anderen
+Modellen hat eine korrekte Vorhersage zu machen.
+
+
+
 ### (3) Fehlerkennzahlen berechnen
 *TODO*
 ```{r}
 # Data Frame erweitern
-evaluation1_1 = rbind(evaluation, data.frame(Model = "m1_1",
-                                          MAE = numeric(1),
-                                          sMAPE = numeric(1)))
+evaluation1_1 = rbind(evaluation1_1, data.frame(Model = "m1_1",
+                                     MAE = numeric(1),
+                                     sMAPE = numeric(1)))
 
 # MAE berechnen
 evaluation1_1[evaluation1_1$m1_1 == "Model2",]$MAE = 
