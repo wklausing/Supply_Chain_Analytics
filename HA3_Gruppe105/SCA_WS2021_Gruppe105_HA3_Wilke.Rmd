@@ -333,40 +333,45 @@ evaluation[evaluation$Model == "Model2",]$sMAPE = smape(model2$model$Fehlmenge, 
 # Fehler anzeigen
 evaluation
 ```
-**Auswahl Begruendung zu Aufgabe 10 Nr.3:**
+**Bewertung und Auswahl Begruendung:** 
+Wir nehmen ParkingSpaceAvailability, da das Residual standard error am kleinsten
+ist, da es im Vergleich zu den anderen Modellen bei 0.01253 also nah an 0 liegt.
+ParkingSpaceAvailability hat somit die hoechste Wahrscheinlichkeit eine korrekte 
+Vorhersage zu machen.
+
+### (2) um eine Variable erweitern
+```{r}
+
+```
+### (2.2) Modell bewerten
+```{r}
+
+```
+
+### (2.3) Bestes Modell auswaehlen
+```{r}
+
+```
+
+### Fehlerkennzahlen berechnen
+```{r}
+# Data Frame erweitern
+evaluation1_4 = rbind(evaluation1_4, data.frame(Model = "m1_4",
+                                     MAE = numeric(1),
+                                     sMAPE = numeric(1)))
+
+# MAE berechnen
+evaluation1_4[evaluation1_4$Model == "Model1_4",]$MAE = mean(abs(model1_4$residuals))
+
+# sMAPE berechnen
+evaluation[evaluation$Model == "Model1_4",]$sMAPE = smape(model1_4$model$Fehlmenge, model2$fitted.values)
+
+
+# Fehler anzeigen
+evaluation
+```
+**Auswahl Begruendung:**
 BEISPIEL: Die Auswahl des besseren Modells ist hier nicht eindeutig. Das Modell2 liegt in MAE und MSE vorn  und Modell1 beim sMAPE. Eine Unterschiedliche Ausrichtung von MAE und sMAPE spricht dafuer, dass der sMAPE aufgrund von Null-Werten verzerrt ist. Entsprechend wird aufgrund des MAE, MSE und des Residuenplots weiter verfahren.
-
-### (4) Lineare Regression
-```{r}
-
-```
-### (5) Auswahl der Kategorie
-```{r}
-
-```
-### (6) Aufbereitung der Variable
-```{r}
-
-```
-### (7) Modelle erstellen und bewerten
-```{r}
-
-```
-**Regressionsbewertung zu (7):** 
-
-### (8) Fehlerkennzahlen berechnen
-```{r}
-
-```
-**Auswahl Begruendung zu (8):**
-
-### (9) Auswahl des geeigneten Modells
-```{r}
-
-```
-**Regressionsbewertung zu (9):** 
-
-
 
 
 
