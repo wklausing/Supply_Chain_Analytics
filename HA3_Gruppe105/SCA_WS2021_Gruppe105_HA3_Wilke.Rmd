@@ -271,6 +271,7 @@ Hinweis: Tritt eine starke Multikollinearität (“strong multicollinearity”) 
 
 
 ### (1.2) Bewertung des besten Modells
+*Quelle: http://www.evanlray.com/stat140_f2018/materials/20181112_residuals/20181112_residual_standard_error_R_squared.pdf*
 (1) Residuenplots 
 ```{r}
 #Residuenplot Modell 1 (Variable AvgHealth)
