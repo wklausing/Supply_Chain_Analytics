@@ -198,6 +198,7 @@ ggplot(data = df_EG, aes(x = period, y = value, group = 1 , color = grp)) +
 
 8) Bewerten Sie die Baseline fuer Ihren gewaehlten Warehousing‐Logistikdienstleister nach MAE und MAPE.Bewertungsrelevant: Output.
 Hinweis: Es bietet sich an, die Werte der Bewertungen in einem Dataframe ‘evaluation’ zu speichern.
+### TODO: Ueberpruefen, ob sMAPE hier richtig ist.
 ```{r}
 # DataFrame erzeugen, dass bei auf die Beschreibung ("Model") leer bzw. 0 ist
 evaluation = data.frame(Model = "Baseline",
@@ -222,6 +223,8 @@ evaluation
 
 9) Teilen Sie das Dataframe Ihres gewaehlten Warehousing‐Logistikdienstleisters in ein Trainings‐ (80%) und ein Test‐Set (20%) auf. Geben Sie von beiden den Tabellenkopf aus. Setzen Sie vorher den Seed 4141. Bewer‐ tungsrelevant: Code, Output.
 *Gegenmassnahme zum Overfitting: Aufteilung in Trainings- & Test-Data Set*
+
+###TODO: Ueberpruefen, wo genau der Unterschied liegt zwischen diesem Model und voherigen.
 ```{r}
 # Einen zufaelligen Zustand herstellen (der jedoch kontrolliert erstellt wird und daher wiederholbar ist)
 set.seed(4141)
