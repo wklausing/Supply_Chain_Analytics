@@ -245,9 +245,118 @@ head(cps_wh_externalsTest)
 10) Wenden Sie die Forward Selection Variante der Wrapper Methode an (siehe Vorlesung). D.h. erstellen Sie zunaechst alle uni‐variaten Modelle, bewerten Sie diese Modelle und waehlen Sie das Modell mit der besten Bewertung aus. Erstellen Sie ‐ basierend auf dem besten Modell der ersten Iteration ‐ alle bi‐variaten Mod‐ elle (das Modell der vorherigen Wrapper‐Iteration wird jeweils um eine Variable erweitert), bewerten Sie diese Modelle und waehlen Sie das Modell mit der besten Bewertung aus. Fuehren Sie dies so lange fort, bis keine Verbesserung mehr erreicht wird. Nutzen Sie zur Modellierung die lineare Regression. Bewerten Sie die Mod‐ elle entsprechend nach MAE und MAPE sowie nach regressionsspezifischen Kennzahlen. Nutzen Sie nur die 5 externen Faktoren als Features, die Sie oben als am staerksten korrelierende externe Faktoren identifiziert haben. Kommentieren Sie Ihr Vorgehen zwischen den Iterationen. Bewertungsrelevant: Output, Vorgehen (einschliesslich Kommentare).
 
 Hinweis: Tritt eine starke Multikollinearität (“strong multicollinearity”) auf, so koennen Sie alle Mod‐ ellierungen mit der entsprechenden Variablen‐Kombination unter Bezug auf diesen Hinweis auslassen (siehe Vorlesungsinhalte zu Korrelation).
+*Fragen:*
+*Baseline DataFrame verwenden oder normale cps_wh_externals DataFrame?*
+### (1) Modelle erstellen
+```{r echo=FALSE}
+# Modelle erstellen mit untransformierter unabhaengiger Variable
+# Wir betrachten jeweils nur ein Merkmal (univariater Datenanalyse)
+  m1_1 = lm(AvgHealth ~ Periode , data = cps_wh_externals)
+  m1_2 = lm(InternetStability ~ Periode, data = cps_wh_externals)
+  m1_3 = lm(BusinessConfidence ~ Periode, data = cps_wh_externals)
+  m1_4 = lm(ParkingSpaceAvailability ~ Periode, data = cps_wh_externals)
+  m1_5 = lm(Congestion ~ Periode, data = cps_wh_externals)
+
+# Anzeigen der Modelle
+  summary(m1_1)
+  summary(m1_2)
+  summary(m1_3)
+  summary(m1_4)
+  summary(m1_5)
+```
+### (2) Bewertung der Modelle
+(1) Residuenplots 
+```{r}
+#Residuenplot Modell 1 (Variable AvgHealth)
+ggplot(data = NULL, aes(x = m1_1$model$AvgHealth, y = m1_1$model$AvgHealth )) + 
+  geom_point()
+
+#Residuenplot Modell 2
+ggplot(data = NULL, aes(x = m1_2$model$InternetStability, y = m1_2$model$InternetStability)) + 
+  geom_point() + 
+  geom_smooth(method = loess)
+
+#Residuenplot Modell 3
+ggplot(data = NULL, aes(x = m1_3$model$BusinessConfidence, y = m1_3$model$BusinessConfidence)) + 
+  geom_point() + 
+  geom_smooth(method = loess)
+
+#Residuenplot Modell 4
+ggplot(data = NULL, aes(x = m1_4$model$ParkingSpaceAvailability, y = m1_4$model$ParkingSpaceAvailability)) + 
+  geom_point() + 
+  geom_smooth(method = loess)
+
+#Residuenplot Modell 5
+ggplot(data = NULL, aes(x = m1_5$model$Congestion, y = m1_5$model$Congestion)) + 
+  geom_point() + 
+  geom_smooth(method = loess)
+```
+### (3) Fehlerkennzahlen berechnen
+*TODO*
+```{r}
+# Data Frame erweitern
+evaluation1_1 = rbind(evaluation, data.frame(Model = "m1_1",
+                                          MAE = numeric(1),
+                                          sMAPE = numeric(1)))
+
+# MAE berechnen
+evaluation1_1[evaluation1_1$m1_1 == "Model2",]$MAE = 
+  mean(abs(m1_1$residuals))
+
+# sMAPE berechnen
+evaluation1_1[evaluation1_1$m1_1 == "Model2",]$sMAPE = 
+  smape(m1_1$model$ , m1_1$fitted.values)
+
+### Auf Aufgabe 10 Lösungen. Muss noch angepasst werden.
+# MAE berechnen
+evaluation[evaluation$Model == "Model2",]$MAE = mean(abs(model2$residuals))
+
+# sMAPE berechnen
+evaluation[evaluation$Model == "Model2",]$sMAPE = smape(model2$model$Fehlmenge, model2$fitted.values)
+
+
+# Fehler anzeigen
+evaluation
+```
+**Auswahl Begruendung zu Aufgabe 10 Nr.3:**
+BEISPIEL: Die Auswahl des besseren Modells ist hier nicht eindeutig. Das Modell2 liegt in MAE und MSE vorn  und Modell1 beim sMAPE. Eine Unterschiedliche Ausrichtung von MAE und sMAPE spricht dafuer, dass der sMAPE aufgrund von Null-Werten verzerrt ist. Entsprechend wird aufgrund des MAE, MSE und des Residuenplots weiter verfahren.
+
+### (4) Lineare Regression
 ```{r}
 
 ```
+### (5) Auswahl der Kategorie
+```{r}
+
+```
+### (6) Aufbereitung der Variable
+```{r}
+
+```
+### (7) Modelle erstellen und bewerten
+```{r}
+
+```
+**Regressionsbewertung zu (7):** 
+
+### (8) Fehlerkennzahlen berechnen
+```{r}
+
+```
+**Auswahl Begruendung zu (8):**
+
+### (9) Auswahl des geeigneten Modells
+```{r}
+
+```
+**Regressionsbewertung zu (9):** 
+
+
+
+
+
+
+
 
 11) Bewerten Sie ihr Modell quantitativ im Vergleich mit der Baseline. Bewertungsrelevant: Output, Kommentar.
 ```{r}
