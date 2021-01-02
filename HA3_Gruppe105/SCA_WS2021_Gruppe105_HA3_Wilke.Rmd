@@ -167,33 +167,32 @@ head(cps_wh_externals_baseline[c(1, 3, 17, 2)])
 7) Visualisieren Sie die Baseline Ihres gewaehlten LDL fuer den Zeitraum von 2016 bis 2020 sowie die IFR in der Region Shanghai. Bewertungsrelevant: Output.
 ```{r}
 plot_data = cps_wh_externals[(cps_wh_externals$Year.x >= 2016 | cps_wh_externals$Year.x <= 2020) & cps_wh_externals$region == "Shangh",]
-plot_data1 = plot_data[c("Periode","Baseline")]
-colnames(plot_data1)[2] <- "y_data"
-plot_data1$groupVar = "Baseline"
-plot_data2 = plot_data[c("Periode","IFR.x")]
-colnames(plot_data2)[2] <- "y_data"
-plot_data2$groupVar = "IFR"
-plot_data = rbind(plot_data1,plot_data2)
-plot_data$groupVar = as.factor(plot_data2$groupVar)
- 
-ggplot(data = plot_data, aes(x = Periode, y = y_data, color = groupVar)) + 
-  geom_line() +
-  # Beschriftung von x-Achse 90 Grad umgedreht
-  theme(axis.text.x = element_text(angle=90, vjust = 0.5)) + 
-  xlab("Periode YYYY/MM")
+plot_data = plot_data[, c("Periode", "IFR.x", "Baseline")] %>% aggregate(. ~ Periode, data = ., mean)
 
-ggplot(data = plot_data, aes(x = Periode, y = y_data, group = 1, color = groupVar)) + 
-  geom_line() +
-  # Beschriftung von x-Achse 90 Grad umgedreht
+ggplot(data = plot_data, aes(x = Periode, group=1)) + 
+  geom_line(aes(y = IFR.x), colour="red") +
+  geom_line(aes(y = Baseline), colour="green") +
+  # Beschriftung von x-Achse um 90 Grad gedreht
   theme(axis.text.x = element_text(angle=90, vjust = 0.5)) + 
-  xlab("Periode YYYY/MM")
+  xlab("Periode") + 
+  ylab("IFR") +
+  ggtitle(label = "CPS Warehousing",
+              subtitle = "IFR and Baseline from 2016 to 2020")
 
 
-ggplot(data = df_EG, aes(x = period, y = value, group = 1 , color = grp)) + 
+baseline_plot_data = plot_data[, c("Periode", "Baseline")]
+baseline_plot_data$type = "baseline"
+colnames(baseline_plot_data)[2] = "data"
+ifr_plot_data = plot_data[, c("Periode", "IFR.x")]
+ifr_plot_data$type = "IFR"
+colnames(ifr_plot_data)[2] = "data"
+plot_final_data = rbind(baseline_plot_data, ifr_plot_data)
+
+ggplot(data = plot_final_data, aes(x = Periode, y=data, group=1, colour = type)) + 
   geom_line() +
-  # Beschriftung von x-Achse 90 Grad umgedreht
-  theme(axis.text.x = element_text(angle=90, vjust = 0.5)) + 
-  xlab("Periode YYYY/MM")
+  theme(axis.text.x = element_text(angle=90, vjust = 0.5, hjust=2, size=10)) + 
+  xlab("Period") + 
+  ylab("IFR")
 ```
 
 8) Bewerten Sie die Baseline fuer Ihren gewaehlten Warehousing‐Logistikdienstleister nach MAE und MAPE.Bewertungsrelevant: Output.
