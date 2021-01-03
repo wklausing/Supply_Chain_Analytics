@@ -250,6 +250,13 @@ evaluation
 ```
 ```{r}
 # Wir nehmen das beste Modell m1_1 und erstellen ein Residuenplot
+ggplot(data = NULL, aes(x = m1_1$model$AvgHealth, y = m1_1$residuals)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE, method = loess) + 
+  ggtitle("Plot m1_1") +
+  xlab("IFR") + ylab("Residuals")
+
+# Wir nehmen das beste Modell m1_1 und erstellen ein Residuenplot
 ggplot(data = NULL, aes(x = m1_1$model$IFR, y = m1_1$residuals)) + 
   geom_point() + 
   geom_smooth(se = FALSE, method = loess) + 
@@ -275,14 +282,14 @@ evaluation = model_bewertungsfunktion(evaluation,m1_1_5)
 
 ```{r}
 # Wir nehmen das beste Modell m1_1_4 und erstellen ein Residuenplot
-ggplot(data = NULL, aes(x = m1_1_4$model$IFR, y = m1_1_4$residuals)) + 
+ggplot(data = NULL, aes(x = m1_1_4$model$ParkingSpaceAvailability, y = m1_1_4$residuals)) + 
   geom_point() + 
   geom_smooth(se = FALSE, method = loess) + 
   ggtitle("Plot m1_1_4") +
   xlab("IFR") + ylab("Residuals")
 ```
 
-```{r eval = FALSE}
+```{r}
 # 3. Iteration
 m1_1_4_2 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + InternetStability, data = cps_wh_externalsTraining)
 m1_1_4_3 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + BusinessConfidence, data = cps_wh_externalsTraining)
@@ -297,7 +304,7 @@ evaluation = model_bewertungsfunktion(evaluation,m1_1_4_5)
 
 ```{r}
 # Wir nehmen das beste Modell m1_1_4 und erstellen ein Residuenplot
-ggplot(data = NULL, aes(x = m1_1_4_2$model$IFR, y = m1_1_4_2$residuals)) + 
+ggplot(data = NULL, aes(x = m1_1_4_2$model$InternetStability, y = m1_1_4_2$residuals)) + 
   geom_point() + 
   geom_smooth(se = FALSE, method = loess) + 
   ggtitle("Plot m1_1_4_2") +
@@ -317,7 +324,7 @@ evaluation = model_bewertungsfunktion(evaluation,m1_1_4_2_5)
 
 ```{r}
 # Wir nehmen das beste Modell m1_1_4 und erstellen ein Residuenplot
-ggplot(data = NULL, aes(x = m1_1_4_2_3$model$IFR, y = m1_1_4_2_3$residuals)) + 
+ggplot(data = NULL, aes(x = m1_1_4_2_3$model$BusinessConfidence, y = m1_1_4_2_3$residuals)) + 
   geom_point() + 
   geom_smooth(se = FALSE, method = loess) + 
   ggtitle("Plot m1_1_4_2_3") +
@@ -335,7 +342,7 @@ evaluation
 
 ```{r}
 # Wir nehmen das beste Modell m1_1_4 und erstellen ein Residuenplot
-ggplot(data = NULL, aes(x = m1_1_4_2_3_5$model$IFR, y = m1_1_4_2_3_5$residuals)) + 
+ggplot(data = NULL, aes(x = m1_1_4_2_3_5$model$Congestion, y = m1_1_4_2_3_5$residuals)) + 
   geom_point() + 
   geom_smooth(se = FALSE, method = loess) + 
   ggtitle("Plot m1_1_4_2_3_5") +
