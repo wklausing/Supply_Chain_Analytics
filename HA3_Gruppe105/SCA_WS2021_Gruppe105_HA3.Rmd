@@ -285,6 +285,8 @@ evaluation
 
 #TODO Regressionskennzahlen fehlen.
 #TODO model_bewertungsfunktion rundet was zu Fehler führen könnte.
+#TODO Periode kommt für jeden Jahr/Monat bei summary(m1_1_4_2_5). Vllt Periode als Zahlen ersetzen.
+#TODO Residuen Plots fehlen
 ```
 
 
