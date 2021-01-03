@@ -1,129 +1,309 @@
 ---
-title: "SCA_WS2021_Gruppe105_HA3"
+title: "SCA_WS2021_Gruppe105_HA2"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
 
-## Datenanalyse
-
-```{r}
-#library("tidyverse")
-library("dummies")
+#Setup environment
+rm(list = ls())
+library("tidyverse")
+library("zoo")
+library("forecast")
 library("ggplot2")
+library("GGally")
 library("Metrics")
+
+#library("data.table")
 ```
 
-
-```{r cars}
+1) Laden Sie die Datensaetze externals und services. Berechnen Sie ueber den gesamten Datensatz services, d.h. fuer jede durchgefuehrte Dienstleistung, den On‐Time‐Delivery (OTD) Status (d.h. 0 oder FALSE, wenn unpuenktlich; 1 oder TRUE wenn puenktlich) sowie die Item Fill Rate (IFR). Stellen Sie an‐ schliessend jeweils die Kennzahlen der durchschnittlichen OTD‐Rate und der durchschnittlichen Item Fill Rate als Kennzahl je Logistikdienstleister aggregiert dar. Geben Sie diese Werte in zwei Tabellen aus. Die Tabellen sollen einen einfachen Vergleich der LDL ermöglichen. Bewertungsrelevant: Output, Code.
+Hinweis: Erneut bietet es sich an, eine Variable Periode dem Datensatz hinzu zu fuegen, welche aus Jahr und Monat besteht (im Format YYYYMM, z.B. Februar 2014 –> 201402)
+```{r}
+#Daten einlesen.
 externals = read.csv2("externals10.csv")
 services = read.csv2("output_services_8Players_v0010.csv")
-externals
-services
-```
 
-*service: Die erbrachte Logistikdienstleistung*
-*• DaysScheduled: Die Anzahl an Tagen, die diese Leistung in Anspruch nehmen sollte*
-*• DaysExecuted: Die Anzahl an Tagen, die diese Leistung tatsaechlich in Anspruch genommen hat*
-*• QScheduled: Die Menge, die bei der Leistung abgefertigt werden sollte*
-*• QExecuted: Die Menge, die bei der Leistung tatsaechlich abgefertigt wurde*
-*• cost: Die Kosten der Leistung*
-
-
-## Daten fuer die Modellierung vorbereiten
-
-### Aufgabe 1: OTD und IFR nach berechnen
-```{r}
-# Variable Periode (YYYYMM) erstellen
-services$Periode <- data.frame(sprintf("%02d%02d", services$Year, services$Month))
-colnames(services$Periode) <- c("JahrMonat")
-
-
-# OTD als 0 (unpuenktlich) oder 1 (puenktlich) markieren
-services$OTDstatus <- data.frame(with(services, ifelse((DaysExecuted <= DaysScheduled), 1, 0)))
-colnames(services$OTDstatus) <- c("1")
-
-# IFR als 0 (unpuenktlich) oder 1 (puenktlich) markieren
-services$IFRstatus <- data.frame(with(services, ifelse((QScheduled <= QExecuted), 1, 0)))
-colnames(services$IFRstatus) <- c("1")
-
-
-# OTD einzelnd pro Service Zeile berechnen
-services$OTD = services$DaysExecuted / services$DaysScheduled
-# Aggregieren und Durchschnitt der OTD-Rate nach Lieferant berechnen
-OTD = data.frame(aggregate(OTD ~ vendor, data = services, mean))
-OTD
-
-# IFR einzelnd pro Service Zeile berechnen
-services$IFR = services$QExecuted / services$QScheduled
-# Aggregieren durchschnittlicher IFR-Rate
-IFR = data.frame(aggregate(IFR ~ vendor, data = services, mean))
-# IFR auf die 2. Nachkommastelle runden
-services[18] = round(services$IFR, 2)
-IFR
-
-# Datenbereinigen aller NaN-Werte in Spalte OTD von Tabelle "services" 
-services$OTD[is.nan(services$OTD)]<-0
-```
-
-
-### Aufgabe 2: Warehousing-DL fuer 2020/12 in Japan
-```{r}
-# IFR einzelnd pro Service Zeile berechnen
+#OTD und IFR berechnen.
+services$OTD = services$DaysScheduled >= services$DaysExecuted
 services$IFR = services$QExecuted / services$QScheduled
 
-# Aggregieren durchschnittlicher IFR-Rate nach Warehousing-DL in Japan
-df1 = data.frame(aggregate(IFR ~ vendor + region,
-                           data = subset(services,
-                                  region =="Japan" &
-                                  service == "Warehousing" &
-                                  Periode == "202012"), mean))
-# Periode 2020-12 kennzeichnen
-df1$Periode = c("2020-12")
+#Durchschnittliche OTD‐Rate und durchschnittliche Item Fill Rate als Kennzahl je Logistikdienstleister aggregiert darstellen.
+mean_OTD_vendor = services %>% aggregate(OTD ~ vendor, data = ., mean)
+mean_IFR_vendor = services %>% aggregate(IFR ~ vendor, data = ., mean)
 
-# IFR auf die 2. Nachkommastelle runden
-df1[3] = round(df1$IFR, 2)
-df1
+#Darstellung
+mean_OTD_vendor[order(-mean_OTD_vendor$OTD),]
+mean_IFR_vendor[order(-mean_IFR_vendor$IFR),]
+
+#Erstellen von Periode-Variable
+services$Periode = sprintf("%02d%02d", services$Year, services$Month)
+
 ```
-*Notiz: In Periode 2020/12 ist das IFR hoeher als die Betrachtung aller Jahre*
 
-
-
-### Aufgabe 3: OTDjeShipping‐Logistikdienstleister
+2) Erzeugen Sie ein neues Dataframe, welches die aggregierte IFR je Warehousing‐Logistikdienstleister enthaelt. Die IFR soll je LDL (nur Warehousing), Region und Periode (eine Periode = ein Monat eines einzelnen Jahres) aggregiert werden. Geben Sie anschliessend eine Tabelle aus, die den einfachen Vergleich der WH‐DL fuer die Periode 2020/12 in Japan ermoeglicht. Bewertungsrelevant: Output, Code.
 ```{r}
-# OTD einzelnd pro Service Zeile berechnen
-services$OTD = services$DaysExecuted / services$DaysScheduled
+# IFR je LDL (nur Warehousing), Region und Periode (eine Periode = ein Monat eines einzelnen Jahres) aggregiert.
+wdl = services[services$service == "Warehousing",] %>% aggregate(IFR ~ vendor+region+Periode, data = ., mean)
+
+# Nur Japan und Periode 2020/12
+wdl_japan_202012 = wdl[wdl$region == "Japan" & wdl$Periode == "202012",]
+
+# Darstellung
+wdl_japan_202012[order(-wdl_japan_202012$IFR),]
+
+#TODO IFR runden auf vierte Stelle
+```
+
+3) Erzeugen Sie ein neues Dataframe, welches die aggregierte OTD je Shipping‐Logistikdienstleister enthaelt. Die OTD soll je LDL (nur Shipping), Region und Periode (eine Periode = ein Monat eines einzelnen Jahres) aggregiert werden. Geben Sie anschliessend eine Tabelle aus, die den einfachen Vergleich der Shipping‐DL fuer die Periode 2020/12 in Japan ermoeglicht. Bewertungsrelevant: Output, Code.
+```{r}
+# OTD je LDL (nur Warehousing), Region und Periode (eine Periode = ein Monat eines einzelnen Jahres) aggregiert.
+sdl = services[services$service == "Shipping",] %>% aggregate(OTD ~ vendor+region+Periode, data = ., mean)
+
+# Nur Japan und Periode 2020/12
+sdl_japan_202012 = sdl[sdl$region == "Japan" & sdl$Periode == "202012",]
+
+# Darstellung 
+sdl_japan_202012[order(-sdl_japan_202012$OTD),]
+
+#TODO OTD runden auf vierte Stelle
+```
+
+##Modellierung: Warehousing
+4) Waehlen Sie den Warehousing‐DL “CPS Warehousing” aus. Vereinigen Sie das eben erzeugte DataFrame (genauer: Ein Subset dieses Dataframes bezueglich des gewaehlten Warehousing‐DL) mit den externen Faktoren der jeweiligen Periode und Region in einem neuen Dataframe. Zeigen Sie davon den Tabellenkopf. Bewertungsrelevant: Output.
+Hinweis: In der Funktion merge() koennen mehrere ueberschneidende Spalten genutzt werden, indem dem “by =”‐Parameter ein Vektor der Spalten uebergeben wird. Ihnen steht frei, andere Funktionen zu verwenden.
+```{r}
+# Spalte Periode für externals erzeugen um mergen zu erleichtern.
+externals$Periode = sprintf("%02d%02d", externals$Year, externals$Month)
+
+# CPS Warehousing subset
+cps_wh = services[services$vendor == "CPS Warehousing",]
+
+# cps_wh und externals in neuem Dataframe auf Periode und Region mergen.
+cps_wh_externals = merge(cps_wh, externals, by = c("region","Periode"))
+
+# Output
+cps_wh_externals %>% head()
+```
+
+5) Sie moechten sich eine Uebersicht zu der Korrelation zwischen den externen Faktoren und der IFR des Warehousing‐Dienstleister schaffen. Fuehren Sie dazu die folgenden Schritte aus:
+(a) Geben Sie eine unsortierte Tabelle aus, in der die externen Effekte und deren Korrelation zur IFR abgebildet sind.
+```{r}
+correlations = cor(cps_wh_externals$IFR, cps_wh_externals[, c(21:42)]) %>% as.data.frame(.) %>% t(.)
+colnames(correlations) <- c("Korrelation zu IFR")
+correlations
+```
+(b) Geben Sie eine Tabelle aus,in der die 5 am starksten zur IFR korrelierenden externen Effekten und deren Korrelation zur IFR abgebildet sind.
+```{r}
+correlations_ordered = data.frame(Features = row.names(correlations), correlations)
+rownames(correlations_ordered) <- NULL
+
+# Korrelationen sind start wenn sie nahe 1 oder nahe -1 sind, daher müssen die Absoluten Werte genommen werden.
+correlations_ordered$Korrelation.zu.IFR = abs(correlations_ordered$Korrelation.zu.IFR) 
+correlations_ordered[order(-correlations_ordered$Korrelation.zu.IFR),] %>% head( ., 5)
+```
+(c) Erstellen Sie ein Korrelations‐Plot fuer diese 5 externen Faktoren. Bewertungsrelevant: Output.
+```{r eval = FALSE}
+# Correlation Plot erzeugen 
+ggpairs(cps_wh_externals[, c("IFR", "AvgHealth", "InternetStability", "BusinessConfidence", "ParkingSpaceAvailability", "Congestion")], 
+        
+        # ohne Visualisierung des Fortschritts der Erstellung des plots
+        progress = FALSE,
+        
+        # mit Visualisierung einer Glaettungslinie und Aenderung der Farbe der Punkte, damit Linie erkennbar
+        lower = list(continuous = wrap("smooth_loess", colour = "steelblue1")))
+
+# TODO Remove eval = false
+```
+
+6) Sie moechten nun eine Lineare Regression durchfuehren, um die IFR mit Hilfe der externen Effekte vorherzusagen. Um die Guete Ihrer Modelle vergleichen zu koennen, benoetigen Sie eine geeignete Baseline. Erzeugen Sie eine sinnvolle Baseline in dem DataFrame zu Ihrem gewaehlten Warehousing‐DL in einer Variable Baseline. Begruenden Sie Ihre Wahl. Geben Sie von dem DataFrame den Tabellenkopf aus. Geben Sie Sie nur die Spalten ‘Periode’, ‘Region’, ‘IFR’ und ‘Baseline’ aus. Bewertungsrelevant: Output, Begruendung.
+```{r}
+# Baseline ist durschnittlicher IFR vom Monat.
+cps_wh_externals = cps_wh_externals %>% aggregate(IFR ~ Periode, data = ., mean) %>% merge(cps_wh_externals, ., by = c("Periode"))
+# Remove added .X and .y from columnnames
+colnames(cps_wh_externals) = gsub('\\.x','',names(cps_wh_externals))
+colnames(cps_wh_externals) = gsub('\\.y','',names(cps_wh_externals))
+
+# Spalte richtig benennen.
+colnames(cps_wh_externals)[43] = "Baseline"
+
+# Tabellenkopf ausgeben.
+cps_wh_externals[, c("Periode", "region", "IFR", "Baseline")] %>% head()
+
+#TODO Begründung fehlt
+```
+
+7) Visualisieren Sie die Baseline Ihres gewaehlten LDL fuer den Zeitraum von 2016 bis 2020 sowie die IFR in der Region Shanghai. Bewertungsrelevant: Output.
+```{r}
+plot_data = cps_wh_externals[(cps_wh_externals$Year >= 2016 | cps_wh_externals$Year <= 2020) & cps_wh_externals$region == "Shangh",]
+plot_data = plot_data[, c("Periode", "IFR", "Baseline")] %>% aggregate(. ~ Periode, data = ., mean)
+baseline_plot_data = plot_data[, c("Periode", "Baseline")]
+baseline_plot_data$type = "baseline"
+colnames(baseline_plot_data)[2] = "data"
+ifr_plot_data = plot_data[, c("Periode", "IFR")]
+ifr_plot_data$type = "IFR"
+colnames(ifr_plot_data)[2] = "data"
+plot_final_data = rbind(baseline_plot_data, ifr_plot_data)
+
+ggplot(data = plot_final_data, aes(x = Periode, y=data, group=1, colour = type)) + 
+  geom_line() +
+  theme(axis.text.x = element_text(angle=90, vjust = 0.5, hjust=2, size=6), 
+    legend.position = c(.16, .95),
+    legend.justification = c("right", "top"),
+    legend.box.just = "right",
+    legend.margin = margin(6, 6, 6, 6)
+   ) + 
+  xlab("Period") + 
+  ylab("IFR") +
+  ggtitle(label = "CPS Warehousing IFR and Baseline from 2016 to 2020")
+# Clean up
+rm(plot_data, baseline_plot_data, ifr_plot_data, plot_final_data)
+
+#TODO Doesnt work right. Makes two lines which hits all points. Or maybe the values are just to close to each other.
+
+```
+
+8) Bewerten Sie die Baseline fuer Ihren gewaehlten Warehousing‐Logistikdienstleister nach MAE und MAPE.Bewertungsrelevant: Output.
+Hinweis: Es bietet sich an, die Werte der Bewertungen in einem Dataframe ‘evaluation’ zu speichern.
+```{r}
+# DataFrame erzeugen, dass bei auf die Beschreibung ("Model") leer bzw. 0 ist
+evaluation = data.frame(Model = "Baseline",
+                        MAE = numeric(1),
+                        sMAPE = numeric(1))
+
+# MAE berechnen
+evaluation[evaluation$Model == "Baseline",]$MAE = mean(abs(cps_wh_externals$IFR - cps_wh_externals$Baseline))
+
+# sMAPE berechnen
+evaluation[evaluation$Model == "Baseline",]$sMAPE = smape(cps_wh_externals$IFR, cps_wh_externals$Baseline)
+
+# MAE und sMAPE auf vierte Nachkommastelle runden
+evaluation[2] = round(evaluation$MAE,4)
+evaluation[3] = round(evaluation$sMAPE,4)
+
+# DataFrame anzeigen
+evaluation
+
+```
+
+9) Teilen Sie das Dataframe Ihres gewaehlten Warehousing‐Logistikdienstleisters in ein Trainings‐ (80%) und ein Test‐Set (20%) auf. Geben Sie von beiden den Tabellenkopf aus. Setzen Sie vorher den Seed 4141. Bewer‐ tungsrelevant: Code, Output.
+```{r}
+# Einen zufaelligen Zustand herstellen (der jedoch kontrolliert erstellt wird und daher wiederholbar ist)
+set.seed(4141)
+
+# eine Zufallsaufwahl erstellen: Aus der Liste von Zahlen 1 bis Laenge von cps_wh_externals werden 80% gewaehlt
+zufall = sample(1:nrow(cps_wh_externals), nrow(cps_wh_externals) * 0.8)
+
+# Die Eintraege in der Zufallsauswahl gehen in das TrainingsSet
+cps_wh_externalsTraining = cps_wh_externals[zufall, ]
+
+# Die Eintraege nicht in der Zufallsauswahl gehen in das TestSet
+cps_wh_externalsTest = cps_wh_externals[-zufall, ]
+
+#Tabellenkopf ausgeben
+head(cps_wh_externalsTest)
+```
+
+10) Wenden Sie die Forward Selection Variante der Wrapper Methode an (siehe Vorlesung). D.h. erstellen Sie zunaechst alle uni‐variaten Modelle, bewerten Sie diese Modelle und waehlen Sie das Modell mit der besten Bewertung aus. Erstellen Sie ‐ basierend auf dem besten Modell der ersten Iteration ‐ alle bi‐variaten Mod‐ elle (das Modell der vorherigen Wrapper‐Iteration wird jeweils um eine Variable erweitert), bewerten Sie diese Modelle und waehlen Sie das Modell mit der besten Bewertung aus. Fuehren Sie dies so lange fort, bis keine Verbesserung mehr erreicht wird. Nutzen Sie zur Modellierung die lineare Regression. Bewerten Sie die Modelle entsprechend nach MAE und MAPE sowie nach regressionsspezifischen Kennzahlen. Nutzen Sie nur die 5 externen Faktoren als Features, die Sie oben als am staerksten korrelierende externe Faktoren identifiziert haben. Kommentieren Sie Ihr Vorgehen zwischen den Iterationen. Bewertungsrelevant: Output, Vorgehen (einschliesslich Kommentare).
+
+Hinweis: Tritt eine starke Multikollinearität (“strong multicollinearity”) auf, so koennen Sie alle Mod‐ ellierungen mit der entsprechenden Variablen‐Kombination unter Bezug auf diesen Hinweis auslassen (siehe Vorlesungsinhalte zu Korrelation).
+```{r eval = FALSE}
+# Funktion um MAE und sMAPE für Modelle auszurechnen.  
+model_bewertungsfunktion <- function(evaluation, model) {
+          # Modelname
+          modelname = deparse(substitute(model))
+          
+          # DF erweitern.
+          evaluation = rbind(evaluation, data.frame(Model = modelname, MAE = numeric(1), sMAPE = numeric(1))) 
+          
+          # MAE berechnen.
+          evaluation[evaluation$Model == modelname,]$MAE = mean(abs(model$residuals)) %>% round(.,4)
+          
+          # sMAPE berechnen.
+          evaluation[evaluation$Model == modelname,]$sMAPE = smape(model$model[,1], model$fitted.values) %>% round(.,4)
+          
+          evaluation %>% unique() %>% return()
+}
 
 
-# Aggregieren durchschnittlicher IFR-Rate nach Warehousing-DL in Japan
-df2 = data.frame(aggregate(OTD ~ vendor + region,
-                           data = subset(services,
-                                  region =="Japan" &
-                                  service == "Shipping" &
-                                  Periode == "202012"), mean))
-# Periode 2020-12 kennzeichnen
-df2$Periode = c("2020-12")
+# Modelle erstellen mit untransformierter unabhaengiger Variable
+# Wir betrachten jeweils nur ein Merkmal (univariater Datenanalyse)
+m1_1 = lm(IFR ~ Periode + AvgHealth, data = cps_wh_externalsTraining)
+m1_2 = lm(IFR ~ Periode + InternetStability, data = cps_wh_externalsTraining)
+m1_3 = lm(IFR ~ Periode + BusinessConfidence, data = cps_wh_externalsTraining)
+m1_4 = lm(IFR ~ Periode + ParkingSpaceAvailability, data = cps_wh_externalsTraining)
+m1_5 = lm(IFR ~ Periode + Congestion, data = cps_wh_externalsTraining)
 
-# IFR auf die 2. Nachkommastelle runden
-df2[3] = round(df2$OTD, 2)
-df2
+evaluation = model_bewertungsfunktion(evaluation,m1_1)
+evaluation = model_bewertungsfunktion(evaluation,m1_2)
+evaluation = model_bewertungsfunktion(evaluation,m1_3)
+evaluation = model_bewertungsfunktion(evaluation,m1_4)
+evaluation = model_bewertungsfunktion(evaluation,m1_5)
+# evaluation
+# m1_1 hat niedrigstes MAE und sMAPE, daher fahren wir mit diesem Modell fort.
+
+
+m1_1_2 = lm(IFR ~ Periode + AvgHealth + InternetStability, data = cps_wh_externalsTraining)
+m1_1_3 = lm(IFR ~ Periode + AvgHealth + BusinessConfidence, data = cps_wh_externalsTraining)
+m1_1_4 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability, data = cps_wh_externalsTraining)
+m1_1_5 = lm(IFR ~ Periode + AvgHealth + Congestion, data = cps_wh_externalsTraining)
+
+evaluation = model_bewertungsfunktion(evaluation,m1_1_2)
+evaluation = model_bewertungsfunktion(evaluation,m1_1_3)
+evaluation = model_bewertungsfunktion(evaluation,m1_1_4)
+evaluation = model_bewertungsfunktion(evaluation,m1_1_5)
+# evaluation
+# m1_1_4 hat niedrigstes MAE und sMAPE, daher fahren wir mit diesem Modell fort.
+
+
+m1_1_4_2 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + InternetStability, data = cps_wh_externalsTraining)
+m1_1_4_3 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + BusinessConfidence, data = cps_wh_externalsTraining)
+m1_1_4_5 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + Congestion, data = cps_wh_externalsTraining)
+
+evaluation = model_bewertungsfunktion(evaluation,m1_1_4_2)
+evaluation = model_bewertungsfunktion(evaluation,m1_1_4_3)
+evaluation = model_bewertungsfunktion(evaluation,m1_1_4_5)
+# evaluation
+# m1_1_4_2 hat niedrigstes MAE und sMAPE, daher fahren wir mit diesem Modell fort.
+
+
+m1_1_4_2_3 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + InternetStability + BusinessConfidence, data = cps_wh_externalsTraining)
+m1_1_4_2_5 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + InternetStability + Congestion, data = cps_wh_externalsTraining)
+
+evaluation = model_bewertungsfunktion(evaluation,m1_1_4_2_3)
+evaluation = model_bewertungsfunktion(evaluation,m1_1_4_2_5)
+# evaluation
+# m1_1_4_2_3 und m1_1_4_2_5 haben den selben MAE und sMAPE wert, daher spielt es keine Rolle welchen wir nehmen. Wir fahren mit m1_1_4_2_3 fort.
+
+
+m1_1_4_2_3_5 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + InternetStability + BusinessConfidence + Congestion, data = cps_wh_externalsTraining)
+
+evaluation = model_bewertungsfunktion(evaluation,m1_1_4_2_3_5)
+evaluation
+# m1_1_4_2_3_5 hat keine Verbesserung gebracht, daher gehen wir zurück zu m1_1_4_2_3 und bleiben dabei.
+
+#TODO Regressionskennzahlen fehlen.
+#TODO model_bewertungsfunktion rundet was zu Fehler führen könnte.
 ```
 
 
+11) Bewerten Sie ihr Modell quantitativ im Vergleich mit der Baseline. Bewertungsrelevant: Output, Kommentar.
+```{r}
 
+```
 
+12) Ihre Chefin kommt auf der Firmenfeier zu Ihnen und schlaegt Ihnen eine Wette vor. Sie sagt: “Ich wette mit Ihnen um 100 Euro, dass die IFR des oben betrachteten WH‐DL im naechsten Monat (Januar 2021) in allen Regionen ueber 0.85 sein wird.” Sollten Sie die Wette eingehen? Bewertungsrelevant: Output, Kommentar.
+```{r}
 
+```
 
+##Entscheidung
 
+13) Ihr Regressionsmodell soll im kommenden Jahr implementiert und langfristig in die Unternehmensprozesse integriert werden. Beschreiben Sie, welche Nutzer und Prozesse davon profitieren koennten und in welcher Form die Loesung bereitgestellt werden koennte. Nehmen Sie ausserdem ausfuehrlich zur Phase der Datenbeschaf‐ fung Stellung. Bewertungsrelevant: Kommentar.
+```{r}
 
-
-
-
-
-
-
+```
 
 
 
