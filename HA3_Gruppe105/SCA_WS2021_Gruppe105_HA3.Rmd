@@ -342,6 +342,41 @@ ggplot(data = NULL, aes(x = m1_1_4_2_3_5$model$IFR, y = m1_1_4_2_3_5$residuals))
   xlab("IFR") + ylab("Residuals")
 ```
 
+## Modell bewerten:
+# Wir ueberpruefen das endgueltige Modell am Ende auf Overfitting mit den Test‐Daten.
+# Wir berechnen die Fehlerkennzahlen fuer TestSet. Dies verlangt, dass fuer das 
+# Test-Set Vorhersagen erstellt werden mit der `predict()` Funktion
+```{r}
+# Wir vergleichen Trainings- und Test-Daten.
+# Wir aus 4. Iteration die Kombination aus Modell m1_1_4_2_3 der Trainingsdaten 
+# fuer die Test-Daten gespeichert in "pred1"
+pred1 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + 
+        InternetStability + Congestion, data = cps_wh_externalsTest)
+
+# Vorhersage treffen mit Test-Daten und mit Modell m1_1_4_2_3 aus 4. Iteration
+pred1 = predict(pred1, cps_wh_externalsTest)  # Vorhersage mit Test-Daten
+pred2 = predict(m1_1_4_2_3, cps_wh_externals) # Vorhersage mit Modell m1_1_4_2_3
+
+# Data Frame erweitern
+evaluationNeu = rbind(data.frame(Model = c("pred1_test", "pred2_test"),
+                                          MAE = numeric(2),
+                                          sMAPE = numeric(2)))
+
+# MAE berechnen
+evaluationNeu[evaluationNeu$Model == "pred1_test", ]$MAE = mean(abs(cps_wh_externalsTest$IFR - pred1))
+evaluationNeu[evaluationNeu$Model == "pred2_test", ]$MAE = mean(abs(cps_wh_externalsTest$IFR - pred2))
+
+# sMAPE berechnen
+evaluationNeu[evaluationNeu$Model == "pred1_test", ]$sMAPE = smape(cps_wh_externalsTest$IFR, pred1)
+evaluationNeu[evaluationNeu$Model == "pred2_test", ]$sMAPE = smape(cps_wh_externalsTest$IFR, pred2)
+
+# Fehler anzeigen
+evaluationNeu
+
+# Kommentar: Ein Overfitting ist hierbei nicht zu finden.
+```
+
+
 
 11) Bewerten Sie ihr Modell quantitativ im Vergleich mit der Baseline. Bewertungsrelevant: Output, Kommentar.
 *Bei Wilke nicht ausführbar, da cps_wh_externals_baseline aus Aufgabe 6 anders definiert als bei Anny*
