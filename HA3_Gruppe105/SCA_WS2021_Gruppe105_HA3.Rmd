@@ -343,9 +343,9 @@ ggplot(data = NULL, aes(x = m1_1_4_2_3_5$model$IFR, y = m1_1_4_2_3_5$residuals))
 ```
 
 ## Modell bewerten:
-# Wir ueberpruefen das endgueltige Modell am Ende auf Overfitting mit den Test‐Daten.
-# Wir berechnen die Fehlerkennzahlen fuer TestSet. Dies verlangt, dass fuer das 
-# Test-Set Vorhersagen erstellt werden mit der `predict()` Funktion
+# Wir ueberpruefen das endgueltige Modell am Ende auf Overfitting mit Test‐Daten
+# Wir berechnen die Fehlerkennzahlen fuer Test-Daten. Dies verlangt, dass fuer
+# fuer Test-Set, dass Vorhersagen  mit der `predict()` Funktion erstellt werden.
 ```{r}
 # Test-Daten
 pred1 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + 
@@ -379,8 +379,11 @@ head(evaluationNeu,2)
 
 
 11) Bewerten Sie ihr Modell quantitativ im Vergleich mit der Baseline. Bewertungsrelevant: Output, Kommentar.
-*Bei Wilke nicht ausführbar, da cps_wh_externals_baseline aus Aufgabe 6 anders definiert als bei Anny*
+
 ```{r eval = FALSE}
+#TODO
+# die anderen Werte wie R^2 bewerten
+  
 # Bewertung von Baseline Modell
 # DataFrame erzeugen
 evaluation = data.frame(Model = "Baseline",
@@ -410,7 +413,34 @@ evaluation
 
 12) Ihre Chefin kommt auf der Firmenfeier zu Ihnen und schlaegt Ihnen eine Wette vor. Sie sagt: “Ich wette mit Ihnen um 100 Euro, dass die IFR des oben betrachteten WH‐DL im naechsten Monat (Januar 2021) in allen Regionen ueber 0.85 sein wird.” Sollten Sie die Wette eingehen? Bewertungsrelevant: Output, Kommentar.
 ```{r}
+#TODO 
+#spezifisch zu 202101 ist schwierig. Vorhersage sagt nicht aus ob es nur ein Monat ist.
+# Wird das Modell m1_1_4_2_3 genommen oder generell die cps_WH_externals Daten?
 
+
+# Modell erstellen
+predictModel = lm(IFR ~ Periode, data = cps_wh_externals)
+
+# predict(model, data)
+predictDF = data.frame(predict(predictModel, data=cps_wh_externals))
+colnames(predictDF)  = "Vorhersage"
+
+# Runden
+predictDF[1] = round(predictDF$Vorhersage, 4)
+
+# Output
+head(predictDF)
+
+# Wir nehmen das beste Modell m1_1_4_2_3_5 und erstellen ein Residuenplot
+ggplot(data = NULL, aes(x = predictModel$model$IFR, y = predictModel$residuals)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE, method = loess) + 
+  ggtitle("Plot predictModel") +
+  xlab("IFR") + ylab("Residuals")
+
+# Kommentar: Wir gehen die Wette ein, da die Vorhersage ueber 0.85 liegt.
+# DataFrame cps_wh_externals enthealt bereits alle CPS Warehousing-Dienstleister
+# Basierend auf diesen Daten von 2016-2020 wird eine Vorhersage zu 2021 gemacht.
 ```
 
 ##Entscheidung
