@@ -250,13 +250,6 @@ evaluation
 ```
 ```{r}
 # Wir nehmen das beste Modell m1_1 und erstellen ein Residuenplot
-ggplot(data = NULL, aes(x = m1_1$model$AvgHealth, y = m1_1$residuals)) + 
-  geom_point() + 
-  geom_smooth(se = FALSE, method = loess) + 
-  ggtitle("Plot m1_1") +
-  xlab("IFR") + ylab("Residuals")
-
-# Wir nehmen das beste Modell m1_1 und erstellen ein Residuenplot
 ggplot(data = NULL, aes(x = m1_1$model$IFR, y = m1_1$residuals)) + 
   geom_point() + 
   geom_smooth(se = FALSE, method = loess) + 
@@ -282,14 +275,14 @@ evaluation = model_bewertungsfunktion(evaluation,m1_1_5)
 
 ```{r}
 # Wir nehmen das beste Modell m1_1_4 und erstellen ein Residuenplot
-ggplot(data = NULL, aes(x = m1_1_4$model$ParkingSpaceAvailability, y = m1_1_4$residuals)) + 
+ggplot(data = NULL, aes(x = m1_1_4$model$IFR, y = m1_1_4$residuals)) + 
   geom_point() + 
   geom_smooth(se = FALSE, method = loess) + 
   ggtitle("Plot m1_1_4") +
   xlab("IFR") + ylab("Residuals")
 ```
 
-```{r}
+```{r eval = FALSE}
 # 3. Iteration
 m1_1_4_2 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + InternetStability, data = cps_wh_externalsTraining)
 m1_1_4_3 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + BusinessConfidence, data = cps_wh_externalsTraining)
@@ -304,7 +297,7 @@ evaluation = model_bewertungsfunktion(evaluation,m1_1_4_5)
 
 ```{r}
 # Wir nehmen das beste Modell m1_1_4 und erstellen ein Residuenplot
-ggplot(data = NULL, aes(x = m1_1_4_2$model$InternetStability, y = m1_1_4_2$residuals)) + 
+ggplot(data = NULL, aes(x = m1_1_4_2$model$IFR, y = m1_1_4_2$residuals)) + 
   geom_point() + 
   geom_smooth(se = FALSE, method = loess) + 
   ggtitle("Plot m1_1_4_2") +
@@ -324,7 +317,7 @@ evaluation = model_bewertungsfunktion(evaluation,m1_1_4_2_5)
 
 ```{r}
 # Wir nehmen das beste Modell m1_1_4 und erstellen ein Residuenplot
-ggplot(data = NULL, aes(x = m1_1_4_2_3$model$BusinessConfidence, y = m1_1_4_2_3$residuals)) + 
+ggplot(data = NULL, aes(x = m1_1_4_2_3$model$IFR, y = m1_1_4_2_3$residuals)) + 
   geom_point() + 
   geom_smooth(se = FALSE, method = loess) + 
   ggtitle("Plot m1_1_4_2_3") +
@@ -342,7 +335,7 @@ evaluation
 
 ```{r}
 # Wir nehmen das beste Modell m1_1_4 und erstellen ein Residuenplot
-ggplot(data = NULL, aes(x = m1_1_4_2_3_5$model$Congestion, y = m1_1_4_2_3_5$residuals)) + 
+ggplot(data = NULL, aes(x = m1_1_4_2_3_5$model$IFR, y = m1_1_4_2_3_5$residuals)) + 
   geom_point() + 
   geom_smooth(se = FALSE, method = loess) + 
   ggtitle("Plot m1_1_4_2_3_5") +
@@ -351,8 +344,33 @@ ggplot(data = NULL, aes(x = m1_1_4_2_3_5$model$Congestion, y = m1_1_4_2_3_5$resi
 
 
 11) Bewerten Sie ihr Modell quantitativ im Vergleich mit der Baseline. Bewertungsrelevant: Output, Kommentar.
-```{r}
+*Bei Wilke nicht ausführbar, da cps_wh_externals_baseline aus Aufgabe 6 anders definiert als bei Anny*
+```{r eval = FALSE}
+# Bewertung von Baseline Modell
+# DataFrame erzeugen
+evaluation = data.frame(Model = "Baseline",
+                        MAE = numeric(1),
+                        sMAPE = numeric(1))
 
+# MAE von Baseline Modell berechnen
+evaluation[evaluation$Model == "Baseline",]$MAE = mean(abs(cps_wh_externals_baseline$IFR - cps_wh_externals_baseline$BaselineIFR))
+
+# sMAPE von Baseline Modell berechnen
+evaluation[evaluation$Model == "Baseline",]$sMAPE = smape(cps_wh_externals_baseline$IFR, cps_wh_externals_baseline$BaselineIFR)
+
+
+
+# Bewertung von Modell m1_1_4_2_3 aus der 4. Iteration
+evaluation = model_bewertungsfunktion(evaluation, m1_1_4_2_3)
+
+# Fehler der Modelle auf die vierte Nachkommastelle runden
+evaluation[2] = round(evaluation$MAE, 4)
+evaluation[3] = round(evaluation$sMAPE, 4)
+
+# Vergleich der Fehler beider Modelle anzeigen
+evaluation
+
+# Kommentar: Es gab eine Verbesserung im Modell	m1_1_4_2_3 im Vergleich zur Baseline, da MAE und sMAPE kleiner sind als die Fehlerwerte vom Baseline Modell.
 ```
 
 12) Ihre Chefin kommt auf der Firmenfeier zu Ihnen und schlaegt Ihnen eine Wette vor. Sie sagt: “Ich wette mit Ihnen um 100 Euro, dass die IFR des oben betrachteten WH‐DL im naechsten Monat (Januar 2021) in allen Regionen ueber 0.85 sein wird.” Sollten Sie die Wette eingehen? Bewertungsrelevant: Output, Kommentar.
