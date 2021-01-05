@@ -342,10 +342,10 @@ ggplot(data = NULL, aes(x = m1_1_4_2_3_5$model$IFR, y = m1_1_4_2_3_5$residuals))
   xlab("IFR") + ylab("Residuals")
 ```
 
-## Modell bewerten:
-# Wir ueberpruefen das endgueltige Modell am Ende auf Overfitting mit Test‐Daten
-# Wir berechnen die Fehlerkennzahlen fuer Test-Daten. Dies verlangt, dass fuer
-# fuer Test-Set, dass Vorhersagen  mit der `predict()` Funktion erstellt werden.
+# Wir vergleichen Trainings- und Test-Daten und bewerten die zwei Modelle.
+# Dabei ueberpruefen wir das endgueltige Modell am Ende auf Overfitting mit den Test‐Daten.
+# Wir berechnen die Fehlerkennzahlen fuer TestSet. Dies verlangt, dass fuer das 
+# Test-Set Vorhersagen erstellt werden mit der `predict()` Funktion
 ```{r}
 # Test-Daten
 pred1 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + 
@@ -445,7 +445,7 @@ ggplot(data = NULL, aes(x = predictModel$model$IFR, y = predictModel$residuals))
 
 ##Entscheidung
 
-13) Ihr Regressionsmodell soll im kommenden Jahr implementiert und langfristig in die Unternehmensprozesse integriert werden. Beschreiben Sie, welche Nutzer und Prozesse davon profitieren koennten und in welcher Form die Loesung bereitgestellt werden koennte. Nehmen Sie ausserdem ausfuehrlich zur Phase der Datenbeschaf‐ fung Stellung. Bewertungsrelevant: Kommentar.
+13) Ihr Regressionsmodell soll im kommenden Jahr implementiert und langfristig in die Unternehmensprozesse integriert werden. Beschreiben Sie, welche Nutzer und Prozesse davon profitieren koennten und in welcher Form die Loesung bereitgestellt werden koennte. Nehmen Sie ausserdem ausfuehrlich zur Phase der Datenbeschaffung Stellung. Bewertungsrelevant: Kommentar.
 ```{r}
 
 ```
