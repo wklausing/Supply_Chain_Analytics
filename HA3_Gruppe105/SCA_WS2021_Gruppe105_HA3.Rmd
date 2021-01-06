@@ -342,11 +342,17 @@ ggplot(data = NULL, aes(x = m1_1_4_2_3_5$model$IFR, y = m1_1_4_2_3_5$residuals))
   xlab("IFR") + ylab("Residuals")
 ```
 
+### Overfitting mit Test-Daten
 # Wir vergleichen Trainings- und Test-Daten und bewerten die zwei Modelle.
-# Dabei ueberpruefen wir das endgueltige Modell am Ende auf Overfitting mit den Test‐Daten.
-# Wir berechnen die Fehlerkennzahlen fuer TestSet. Dies verlangt, dass fuer das 
-# Test-Set Vorhersagen erstellt werden mit der `predict()` Funktion
+# Dabei ueberpruefen wir das endgueltige Modell Modell m1_1_4_2_3 am Ende auf 
+# Overfitting indem die Fehlerkennzahlen fuer TestSet berechnen. Dies verlangt, 
+# dass fuer das TestSet Vorhersagen erstellt werden mit der `predict()` Funktion
 ```{r}
+# Bestes Modell aus evaluation filtern und am Ende an dem TestSet anhaengen
+evaluation = data.frame(subset(evaluation, Model == "m1_1_4_2_3"))
+
+
+
 # Test-Daten
 pred1 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + 
         InternetStability + Congestion, 
@@ -355,25 +361,30 @@ pred1 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability +
 # Vorhersage mit Test-Daten treffen
 pred1 = predict(pred1, cps_wh_externalsTest)  
 
+
 # Data Frame erweitern
-evaluationNeu = rbind(bestmodel,data.frame(Model = c("pred1_test"),
+evaluationNeu = rbind(data.frame(Model = c("Test_Model"),
                                           MAE = numeric(2),
                                           sMAPE = numeric(2)))
-
 # MAE berechnen
-evaluationNeu[evaluationNeu$Model == "pred1_test", ]$MAE = 
+evaluationNeu[evaluationNeu$Model == "Test_Model", ]$MAE = 
                                     mean(abs(cps_wh_externalsTest$IFR - pred1))
-
 # sMAPE berechnen
-evaluationNeu[evaluationNeu$Model == "pred1_test", ]$sMAPE = 
+evaluationNeu[evaluationNeu$Model == "Test_Model", ]$sMAPE = 
                                     smape(cps_wh_externalsTest$IFR, pred1)
 
-# Runden und anzeigen
-evaluationNeu[2] = round(evaluationNeu$MAE, 4)
-evaluationNeu[3] = round(evaluationNeu$sMAPE, 4)
-head(evaluationNeu,2)
 
-# Kommentar: Ein Overfitting ist hierbei nicht zu finden.
+# Zeilen der Fehlerkennzahlen des besten Modells und des Test-Modells verbinden
+x = rbind(evaluation, evaluationNeu)
+
+# Runden und anzeigen
+x[2] = round(x$MAE, 4)
+x[3] = round(x$sMAPE, 4)
+
+head(x,2)
+
+# Kommentar: Das beste Modell und das Test-Modell weisen aehnliche Zahlen auf.
+# Ein Overfitting ist hierbei nicht zu finden.
 ```
 
 
