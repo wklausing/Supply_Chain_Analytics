@@ -242,21 +242,12 @@ evaluation = model_bewertungsfunktion(evaluation,m1_2)
 evaluation = model_bewertungsfunktion(evaluation,m1_3)
 evaluation = model_bewertungsfunktion(evaluation,m1_4)
 evaluation = model_bewertungsfunktion(evaluation,m1_5)
-evaluation
+#evaluation
 #summary(m1_1)
 
 # Begruendung: m1_1 hat niedrigstes MAE und sMAPE, daher fahren wir mit 
 # diesem Modell fort. Residual standard error von m1_1 ist zudem das leinste.
 ```
-```{r}
-# Wir nehmen das beste Modell m1_1 und erstellen ein Residuenplot
-ggplot(data = NULL, aes(x = m1_1$model$IFR, y = m1_1$residuals)) + 
-  geom_point() + 
-  geom_smooth(se = FALSE, method = loess) + 
-  ggtitle("Plot m1_1") +
-  xlab("IFR") + ylab("Residuals")
-```
-
 
 ```{r}
 # 2. Iteration
@@ -269,17 +260,8 @@ evaluation = model_bewertungsfunktion(evaluation,m1_1_2)
 evaluation = model_bewertungsfunktion(evaluation,m1_1_3)
 evaluation = model_bewertungsfunktion(evaluation,m1_1_4)
 evaluation = model_bewertungsfunktion(evaluation,m1_1_5)
-
+# evaluation
 # m1_1_4 hat niedrigstes MAE und sMAPE, daher fahren wir mit diesem Modell fort.
-```
-
-```{r}
-# Wir nehmen das beste Modell m1_1_4 und erstellen ein Residuenplot
-ggplot(data = NULL, aes(x = m1_1_4$model$IFR, y = m1_1_4$residuals)) + 
-  geom_point() + 
-  geom_smooth(se = FALSE, method = loess) + 
-  ggtitle("Plot m1_1_4") +
-  xlab("IFR") + ylab("Residuals")
 ```
 
 ```{r}
@@ -296,15 +278,6 @@ evaluation = model_bewertungsfunktion(evaluation,m1_1_4_5)
 ```
 
 ```{r}
-# Wir nehmen das beste Modell m1_1_4 und erstellen ein Residuenplot
-ggplot(data = NULL, aes(x = m1_1_4_2$model$IFR, y = m1_1_4_2$residuals)) + 
-  geom_point() + 
-  geom_smooth(se = FALSE, method = loess) + 
-  ggtitle("Plot m1_1_4_2") +
-  xlab("IFR") + ylab("Residuals")
-```
-
-```{r}
  # 4. Iteration
 m1_1_4_2_3 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + InternetStability + BusinessConfidence, data = cps_wh_externalsTraining)
 m1_1_4_2_5 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + InternetStability + Congestion, data = cps_wh_externalsTraining)
@@ -316,30 +289,12 @@ evaluation = model_bewertungsfunktion(evaluation,m1_1_4_2_5)
 ```
 
 ```{r}
-# Wir nehmen das beste Modell m1_1_4 und erstellen ein Residuenplot
-ggplot(data = NULL, aes(x = m1_1_4_2_3$model$IFR, y = m1_1_4_2_3$residuals)) + 
-  geom_point() + 
-  geom_smooth(se = FALSE, method = loess) + 
-  ggtitle("Plot m1_1_4_2_3") +
-  xlab("IFR") + ylab("Residuals")
-```
-
-```{r}
 # 5. Iteration
 m1_1_4_2_3_5 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + InternetStability + BusinessConfidence + Congestion, data = cps_wh_externalsTraining)
 
 evaluation = model_bewertungsfunktion(evaluation,m1_1_4_2_3_5)
 evaluation
 # m1_1_4_2_3_5 hat keine Verbesserung gebracht, daher gehen wir zurück zu m1_1_4_2_3 und bleiben dabei.
-```
-
-```{r}
-# Wir nehmen das beste Modell m1_1_4 und erstellen ein Residuenplot
-ggplot(data = NULL, aes(x = m1_1_4_2_3_5$model$IFR, y = m1_1_4_2_3_5$residuals)) + 
-  geom_point() + 
-  geom_smooth(se = FALSE, method = loess) + 
-  ggtitle("Plot m1_1_4_2_3_5") +
-  xlab("IFR") + ylab("Residuals")
 ```
 
 # Wir vergleichen Trainings- und Test-Daten und bewerten die zwei Modelle.
@@ -376,10 +331,7 @@ head(evaluationNeu,2)
 # Kommentar: Ein Overfitting ist hierbei nicht zu finden.
 ```
 
-
-
 11) Bewerten Sie ihr Modell quantitativ im Vergleich mit der Baseline. Bewertungsrelevant: Output, Kommentar.
-
 ```{r}
 #TODO
 # die anderen Werte wie R^2 bewerten
