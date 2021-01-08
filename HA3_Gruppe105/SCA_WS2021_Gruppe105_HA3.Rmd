@@ -457,9 +457,31 @@ ggplot(data = NULL, aes(x = predictModel$model$IFR, y = predictModel$residuals))
 ##Entscheidung
 
 13) Ihr Regressionsmodell soll im kommenden Jahr implementiert und langfristig in die Unternehmensprozesse integriert werden. Beschreiben Sie, welche Nutzer und Prozesse davon profitieren koennten und in welcher Form die Loesung bereitgestellt werden koennte. Nehmen Sie ausserdem ausfuehrlich zur Phase der Datenbeschaffung Stellung. Bewertungsrelevant: Kommentar.
-```{r}
+Antwort zu Aufgabe 13:
+*Nutzer*: Da unser Regressionsmodell im kommenden Jahr langfristig in die Unternehmensprozesse implementiert wird, stellt sich die Frage, welche Nutzer und welche Prozesse vom Regressionsmodell profitieren koennen und wie sie das Modell verwenden sollen. Hierbei nehmen wir an, dass die
+Geschaeftsfuehrung einen Vorrang auf Informationsbereitstellung hat, da diese Stakeholder wichtige und langfristige Entscheidungen im Unternehmen treffen werden. Diese Entscheidungen koennen sie mit Hilfe des Regressionsmodells treffen, da das Modell den Einfluss der Externen Effekte auf die Leistung der Logistikdienstleister uebersichtlich darstellt. Dabei wurden fuenf externe Effekte identifiziert, die vergleichsweise einen deutlichen Einfluss auf die Logistikdienstleister haben.
+Weitere Nutzer koennen neben der Geschaeftsfuehrung auch die Abteilungen der Logistik sowie Finanzen sein, da das Modell wichtige Logistik-Kennzahlen wie das Iten Fill Rate (IFR) abbildet.
+*Prozesse*: Anhand des Regressionsmodells kann beispielsweise die Logistik-Abteilung Abschaetzungen machen, welche Leistungen der Logistikdienstleister in welchem Zeitraum durchfuehrt und durch welche externen Faktoren beeinflusst wird. Hierbei kann die Logistik-Abteilung die Lieferprozesse sowie SLAs somit besser steuern. Da wir jetzt diese fuenf externen Faktoren wie: Periode, AvgHealth, ParkingSpaceAvailability, InternetStability und Congestion in unserem Modell abgebildet haben.
+*Loesung Bereitstellung*:
+*Datenbeschaffgung*:
+Phase der Datenbeschaffung:
+- Datum (Periode kombinieren)
+- Merge() von Periode und externen Faktoren
+- CPS-WL und Region Japan filtern für Aufgabe 10 relevant
+- Normalisierung
+- Datentyp ändern (hier nicht berücksichtigt)
+. Variablen transformieren (hier nicht berücksichtigt)
+- Variablen kombinieren und Modell erstellen
 
-```
+
+####
+Allgemein: 
+Korrelation zwischen zwei Variablen ist eine Messung für Assoziationen zwischen IFR und einer weiteren Variable (Externe Faktoren) Item Fill Rate (IFR). Wir untersuchen die Korrelation zwischen IFR und den externen Faktoren hat. Die Korrelation ist keine Messung fuer Kausalitaet. Wenn IFR mit den externen Faktoren korreliert, dann kann es auf verschiedene kausale Beziehungen zurueckfuehren. In unserem Fall kann eine hohe Korrelation entweder durch Zufallentstehen und beschreibt keinen stabilen Zusammenhang, oder die Korrelation ist auf einen kausalen Zusammenhang zurueckzufuehren, aber die Richtung ist nicht eindeutig.
+
+####
+Sie haben nun etwas Erfahrung auf dem Gebiet der Distribution von “Limonalytics”. Obwohl Sie stets gewissenhaft fuer die naechsten Monate im Voraus planen, schwankt die Leistung der Logistikdienstleister stark. Daher sollen Sie ein Modell aufstellen, um deren Leistung auf Basis von externen Effekten abzuschaetzen. Sie erhalten daher die externen Effekte der letzten 60 Monate (2016‐2020) sowie die Vorhersage fuer die kommenden 12 Monate (2021). Die Vorhersage der externen Effekte fuer die naechsten Monate ist ‐ selbstverstaendlich ‐ ungenau und ebenso mit statistischen Verfahren erstellt. Dies ist fuer Sie jedoch innerhalb der Analyse nicht relevant. Es sollte jedoch in Ihrer Entscheidung kurz reflektiert werden.
+####
+
 
 
 
