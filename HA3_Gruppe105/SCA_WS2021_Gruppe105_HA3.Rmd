@@ -12,10 +12,7 @@ library("tidyverse")
 library("zoo")
 library("forecast")
 library("ggplot2")
-library("GGally")
 library("Metrics")
-
-#library("data.table")
 ```
 
 1) Laden Sie die Datensaetze externals und services. Berechnen Sie ueber den gesamten Datensatz services, d.h. fuer jede durchgefuehrte Dienstleistung, den On‐Time‐Delivery (OTD) Status (d.h. 0 oder FALSE, wenn unpuenktlich; 1 oder TRUE wenn puenktlich) sowie die Item Fill Rate (IFR). Stellen Sie an‐ schliessend jeweils die Kennzahlen der durchschnittlichen OTD‐Rate und der durchschnittlichen Item Fill Rate als Kennzahl je Logistikdienstleister aggregiert dar. Geben Sie diese Werte in zwei Tabellen aus. Die Tabellen sollen einen einfachen Vergleich der LDL ermöglichen. Bewertungsrelevant: Output, Code.
@@ -138,15 +135,19 @@ cps_wh_externals[, c("Periode", "region", "IFR", "Baseline")] %>% head()
 ```{r}
 plot_data = cps_wh_externals[(cps_wh_externals$Year >= 2016 | cps_wh_externals$Year <= 2020) & cps_wh_externals$region == "Shangh",]
 plot_data = plot_data[, c("Periode", "IFR", "Baseline")] %>% aggregate(. ~ Periode, data = ., mean)
+
 baseline_plot_data = plot_data[, c("Periode", "Baseline")]
-baseline_plot_data$type = "baseline"
+baseline_plot_data$type = "Baseline"
 colnames(baseline_plot_data)[2] = "data"
+
 ifr_plot_data = plot_data[, c("Periode", "IFR")]
 ifr_plot_data$type = "IFR"
 colnames(ifr_plot_data)[2] = "data"
-plot_final_data = rbind(baseline_plot_data, ifr_plot_data)
 
-ggplot(data = plot_final_data, aes(x = Periode, y=data, group=1, colour = type)) + 
+plot_final_data = rbind(baseline_plot_data, ifr_plot_data)
+plot_final_data$Periode = as.yearmon(plot_final_data$Periode, "%Y%m")
+
+ggplot(data = plot_final_data, aes(x = Periode, y=data, colour = type)) + 
   geom_line() +
   theme(axis.text.x = element_text(angle=90, vjust = 0.5, hjust=2, size=6), 
     legend.position = c(.16, .95),
@@ -159,9 +160,6 @@ ggplot(data = plot_final_data, aes(x = Periode, y=data, group=1, colour = type))
   ggtitle(label = "CPS Warehousing IFR and Baseline from 2016 to 2020")
 # Clean up
 rm(plot_data, baseline_plot_data, ifr_plot_data, plot_final_data)
-
-#TODO Doesnt work right. Makes two lines which hits all points. Or maybe the values are just to close to each other.
-
 ```
 
 8) Bewerten Sie die Baseline fuer Ihren gewaehlten Warehousing‐Logistikdienstleister nach MAE und MAPE.Bewertungsrelevant: Output.
