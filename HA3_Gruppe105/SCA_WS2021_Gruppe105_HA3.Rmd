@@ -123,17 +123,19 @@ colnames(cps_wh_externals) = gsub('\\.x','',names(cps_wh_externals))
 colnames(cps_wh_externals) = gsub('\\.y','',names(cps_wh_externals))
 
 # Spalte richtig benennen.
+colnames(cps_wh_externals)[2] = "Region"
 colnames(cps_wh_externals)[43] = "Baseline"
 
+
 # Tabellenkopf ausgeben.
-cps_wh_externals[, c("Periode", "region", "IFR", "Baseline")] %>% head()
+cps_wh_externals[, c("Periode", "Region", "IFR", "Baseline")] %>% head()
 
 #TODO Begründung fehlt
 ```
 
 7) Visualisieren Sie die Baseline Ihres gewaehlten LDL fuer den Zeitraum von 2016 bis 2020 sowie die IFR in der Region Shanghai. Bewertungsrelevant: Output.
 ```{r}
-plot_data = cps_wh_externals[(cps_wh_externals$Year >= 2016 | cps_wh_externals$Year <= 2020) & cps_wh_externals$region == "Shangh",]
+plot_data = cps_wh_externals[(cps_wh_externals$Year >= 2016 | cps_wh_externals$Year <= 2020) & cps_wh_externals$Region == "Shangh",]
 plot_data = plot_data[, c("Periode", "IFR", "Baseline")] %>% aggregate(. ~ Periode, data = ., mean)
 
 baseline_plot_data = plot_data[, c("Periode", "Baseline")]
