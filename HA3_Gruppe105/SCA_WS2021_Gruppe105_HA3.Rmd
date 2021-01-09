@@ -118,14 +118,14 @@ ggpairs(cps_wh_externals[, c("IFR", "AvgHealth", "InternetStability", "BusinessC
 ```{r}
 # Baseline ist durschnittlicher IFR vom Monat.
 cps_wh_externals = cps_wh_externals %>% aggregate(IFR ~ Periode, data = ., mean) %>% merge(cps_wh_externals, ., by = c("Periode"))
-# Remove added .X and .y from columnnames
+
+# Entferne hinzugefügtes .X und .y von Spaltennamen
 colnames(cps_wh_externals) = gsub('\\.x','',names(cps_wh_externals))
 colnames(cps_wh_externals) = gsub('\\.y','',names(cps_wh_externals))
 
-# Spalte richtig benennen.
+# Spalten richtig benennen.
 colnames(cps_wh_externals)[2] = "Region"
 colnames(cps_wh_externals)[43] = "Baseline"
-
 
 # Tabellenkopf ausgeben.
 cps_wh_externals[, c("Periode", "Region", "IFR", "Baseline")] %>% head()
@@ -189,6 +189,9 @@ evaluation
 
 9) Teilen Sie das Dataframe Ihres gewaehlten Warehousing‐Logistikdienstleisters in ein Trainings‐ (80%) und ein Test‐Set (20%) auf. Geben Sie von beiden den Tabellenkopf aus. Setzen Sie vorher den Seed 4141. Bewer‐ tungsrelevant: Code, Output.
 ```{r}
+# Erzeuge iterative Zahlenreihe statt Periode
+cps_wh_externals <- transform(cps_wh_externals,PeriodeNumber=as.numeric(factor(Periode)))
+
 # Einen zufaelligen Zustand herstellen (der jedoch kontrolliert erstellt wird und daher wiederholbar ist)
 set.seed(4141)
 
@@ -208,8 +211,15 @@ head(cps_wh_externalsTest)
 10) Wenden Sie die Forward Selection Variante der Wrapper Methode an (siehe Vorlesung). D.h. erstellen Sie zunaechst alle uni‐variaten Modelle, bewerten Sie diese Modelle und waehlen Sie das Modell mit der besten Bewertung aus. Erstellen Sie ‐ basierend auf dem besten Modell der ersten Iteration ‐ alle bi‐variaten Mod‐ elle (das Modell der vorherigen Wrapper‐Iteration wird jeweils um eine Variable erweitert), bewerten Sie diese Modelle und waehlen Sie das Modell mit der besten Bewertung aus. Fuehren Sie dies so lange fort, bis keine Verbesserung mehr erreicht wird. Nutzen Sie zur Modellierung die lineare Regression. Bewerten Sie die Modelle entsprechend nach MAE und MAPE sowie nach regressionsspezifischen Kennzahlen. Nutzen Sie nur die 5 externen Faktoren als Features, die Sie oben als am staerksten korrelierende externe Faktoren identifiziert haben. Kommentieren Sie Ihr Vorgehen zwischen den Iterationen. Bewertungsrelevant: Output, Vorgehen (einschliesslich Kommentare).
 
 Hinweis: Tritt eine starke Multikollinearität (“strong multicollinearity”) auf, so koennen Sie alle Mod‐ ellierungen mit der entsprechenden Variablen‐Kombination unter Bezug auf diesen Hinweis auslassen (siehe Vorlesungsinhalte zu Korrelation).
-
 ```{r}
+
+#Aufg. 10: Nur sMape und MAE und Fehlerkennzahlen
+#Aufg. 11:  Nur nach sMape und MAE
+
+# Spalte für R und R**2 hinzufügen bei evaluation df hinzufügen.
+evaluation$R = NA %>% as.numeric(.) 
+evaluation$R2 = NA %>% as.numeric(.)
+
 # Funktion um MAE und sMAPE für Modelle auszurechnen.  
 model_bewertungsfunktion <- function(evaluation, model) {
           # Modelname
@@ -217,13 +227,19 @@ model_bewertungsfunktion <- function(evaluation, model) {
           
           # DF erweitern.
           evaluation = rbind(evaluation, data.frame(Model = 
-                               modelname, MAE = numeric(1), sMAPE = numeric(1))) 
+                               modelname, MAE = numeric(1), sMAPE = numeric(1), R  = as.numeric(NA), R2  = as.numeric(NA))) 
           
           # MAE berechnen.
-          evaluation[evaluation$Model == modelname,]$MAE = mean(abs(model$residuals)) %>% round(.,4)
+          evaluation[evaluation$Model == modelname,]$MAE = mean(abs(model$residuals)) #%>% round(.,4)
           
           # sMAPE berechnen.
-          evaluation[evaluation$Model == modelname,]$sMAPE = smape(model$model[,1], model$fitted.values) %>% round(.,4)
+          evaluation[evaluation$Model == modelname,]$sMAPE = smape(model$model[,1], model$fitted.values) #%>% round(.,4)
+          
+          # R berechnen.
+          #evaluation[evaluation$Model == modelname,]$sMAPE = smape(model$model[,1], model$fitted.values) %>% round(.,4)
+          
+          # R**2 berechnen.
+          #evaluation[evaluation$Model == modelname,]$sMAPE = smape(model$model[,1], model$fitted.values) %>% round(.,4)
           
           evaluation %>% unique() %>% return()
 }
@@ -231,11 +247,14 @@ model_bewertungsfunktion <- function(evaluation, model) {
 # 1. Iteration
 # Modelle erstellen mit untransformierter unabhaengiger Variable
 # Wir betrachten jeweils nur ein Merkmal (univariater Datenanalyse)
-m1_1 = lm(IFR ~ Periode + AvgHealth, data = cps_wh_externalsTraining)
-m1_2 = lm(IFR ~ Periode + InternetStability, data = cps_wh_externalsTraining)
-m1_3 = lm(IFR ~ Periode + BusinessConfidence, data = cps_wh_externalsTraining)
-m1_4 = lm(IFR ~ Periode + ParkingSpaceAvailability, data = cps_wh_externalsTraining)
-m1_5 = lm(IFR ~ Periode + Congestion, data = cps_wh_externalsTraining)
+
+cps_wh_externalsTraining$Periode = as.factor(cps_wh_externalsTraining$Periode)
+
+m1_1 = lm(IFR ~ PeriodeNumber + AvgHealth, data = cps_wh_externalsTraining)
+m1_2 = lm(IFR ~ PeriodeNumber + InternetStability, data = cps_wh_externalsTraining)
+m1_3 = lm(IFR ~ PeriodeNumber + BusinessConfidence, data = cps_wh_externalsTraining)
+m1_4 = lm(IFR ~ PeriodeNumber + ParkingSpaceAvailability, data = cps_wh_externalsTraining)
+m1_5 = lm(IFR ~ PeriodeNumber + Congestion, data = cps_wh_externalsTraining)
 
 evaluation = model_bewertungsfunktion(evaluation,m1_1)
 evaluation = model_bewertungsfunktion(evaluation,m1_2)
@@ -251,10 +270,10 @@ evaluation = model_bewertungsfunktion(evaluation,m1_5)
 
 ```{r}
 # 2. Iteration
-m1_1_2 = lm(IFR ~ Periode + AvgHealth + InternetStability, data = cps_wh_externalsTraining)
-m1_1_3 = lm(IFR ~ Periode + AvgHealth + BusinessConfidence, data = cps_wh_externalsTraining)
-m1_1_4 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability, data = cps_wh_externalsTraining)
-m1_1_5 = lm(IFR ~ Periode + AvgHealth + Congestion, data = cps_wh_externalsTraining)
+m1_1_2 = lm(IFR ~ PeriodeNumber + AvgHealth + InternetStability, data = cps_wh_externalsTraining)
+m1_1_3 = lm(IFR ~ PeriodeNumber + AvgHealth + BusinessConfidence, data = cps_wh_externalsTraining)
+m1_1_4 = lm(IFR ~ PeriodeNumber + AvgHealth + ParkingSpaceAvailability, data = cps_wh_externalsTraining)
+m1_1_5 = lm(IFR ~ PeriodeNumber + AvgHealth + Congestion, data = cps_wh_externalsTraining)
 
 evaluation = model_bewertungsfunktion(evaluation,m1_1_2)
 evaluation = model_bewertungsfunktion(evaluation,m1_1_3)
@@ -266,9 +285,9 @@ evaluation = model_bewertungsfunktion(evaluation,m1_1_5)
 
 ```{r}
 # 3. Iteration
-m1_1_4_2 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + InternetStability, data = cps_wh_externalsTraining)
-m1_1_4_3 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + BusinessConfidence, data = cps_wh_externalsTraining)
-m1_1_4_5 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + Congestion, data = cps_wh_externalsTraining)
+m1_1_4_2 = lm(IFR ~ PeriodeNumber + AvgHealth + ParkingSpaceAvailability + InternetStability, data = cps_wh_externalsTraining)
+m1_1_4_3 = lm(IFR ~ PeriodeNumber + AvgHealth + ParkingSpaceAvailability + BusinessConfidence, data = cps_wh_externalsTraining)
+m1_1_4_5 = lm(IFR ~ PeriodeNumber + AvgHealth + ParkingSpaceAvailability + Congestion, data = cps_wh_externalsTraining)
 
 evaluation = model_bewertungsfunktion(evaluation,m1_1_4_2)
 evaluation = model_bewertungsfunktion(evaluation,m1_1_4_3)
@@ -279,8 +298,8 @@ evaluation = model_bewertungsfunktion(evaluation,m1_1_4_5)
 
 ```{r}
  # 4. Iteration
-m1_1_4_2_3 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + InternetStability + BusinessConfidence, data = cps_wh_externalsTraining)
-m1_1_4_2_5 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + InternetStability + Congestion, data = cps_wh_externalsTraining)
+m1_1_4_2_3 = lm(IFR ~ PeriodeNumber + AvgHealth + ParkingSpaceAvailability + InternetStability + BusinessConfidence, data = cps_wh_externalsTraining)
+m1_1_4_2_5 = lm(IFR ~ PeriodeNumber + AvgHealth + ParkingSpaceAvailability + InternetStability + Congestion, data = cps_wh_externalsTraining)
 
 evaluation = model_bewertungsfunktion(evaluation,m1_1_4_2_3)
 evaluation = model_bewertungsfunktion(evaluation,m1_1_4_2_5)
@@ -290,7 +309,7 @@ evaluation = model_bewertungsfunktion(evaluation,m1_1_4_2_5)
 
 ```{r}
 # 5. Iteration
-m1_1_4_2_3_5 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + InternetStability + BusinessConfidence + Congestion, data = cps_wh_externalsTraining)
+m1_1_4_2_3_5 = lm(IFR ~ PeriodeNumber + AvgHealth + ParkingSpaceAvailability + InternetStability + BusinessConfidence + Congestion, data = cps_wh_externalsTraining)
 
 evaluation = model_bewertungsfunktion(evaluation,m1_1_4_2_3_5)
 evaluation
@@ -303,7 +322,7 @@ evaluation
 # Test-Set Vorhersagen erstellt werden mit der `predict()` Funktion
 ```{r}
 # Test-Daten
-pred1 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + 
+pred1 = lm(IFR ~ PeriodeNumber + AvgHealth + ParkingSpaceAvailability + 
         InternetStability + Congestion, 
         data = cps_wh_externalsTest)eval
 
