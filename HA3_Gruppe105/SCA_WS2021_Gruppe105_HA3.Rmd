@@ -356,10 +356,7 @@ head(evaluationNeu,2)
 # DataFrame erzeugen
 evaluation = data.frame(Model = "Baseline",
                         MAE = numeric(1),
-                        sMAPE = numeric(1),
-                        R = numeric(1), 
-                        adjR = numeric(1)
-                        )
+                        sMAPE = numeric(1))
 
 # MAE von Baseline Modell berechnen
 evaluation[evaluation$Model == "Baseline",]$MAE = 
@@ -369,25 +366,16 @@ evaluation[evaluation$Model == "Baseline",]$MAE =
 evaluation[evaluation$Model == "Baseline",]$sMAPE = 
   smape(cps_wh_externals$IFR, cps_wh_externals$Baseline)
 
-# R^2 und adhjusted R^2 berechnen
-model_1 = lm(IFR ~ Periode, data = cps_wh_externals)
-evaluation[evaluation$Model == "Baseline",]$R = summary(model_1)$r.squared
-evaluation[evaluation$Model == "Baseline",]$adjR =summary(model_1)$adj.r.squared
-
-
 
 # Bewertung von Modell m1_1_4_2_3 aus der 4. Iteration
-# evaluation = model_bewertungsfunktion(evaluation, m1_1_4_2_3)
+evaluation = model_bewertungsfunktion(evaluation, m1_1_4_2_3)
 
 # Fehler der Modelle auf die vierte Nachkommastelle runden
 evaluation[2] = round(evaluation$MAE, 4)
 evaluation[3] = round(evaluation$sMAPE, 4)
-evaluation[4] = round(evaluation$R, 4)
-evaluation[5] = round(evaluation$adjR, 4)
 
 # Vergleich der Fehler beider Modelle anzeigen
 evaluation
-```
 ```
 ### TODO: Vergleich von Baseline und best model R und adjR
 Kommentar: Es gab eine Verbesserung im Modell	m1_1_4_2_3 im Vergleich zur 
