@@ -387,10 +387,8 @@ Baseline, da MAE und sMAPE kleiner sind als die Fehlerwerte vom Baseline Modell.
 12) Ihre Chefin kommt auf der Firmenfeier zu Ihnen und schlaegt Ihnen eine Wette vor. Sie sagt: “Ich wette mit Ihnen um 100 Euro, dass die IFR des oben betrachteten WH‐DL im naechsten Monat (Januar 2021) in allen Regionen ueber 0.85 sein wird.” Sollten Sie die Wette eingehen? Bewertungsrelevant: Output, Kommentar.
 ```{r}
 #TODO 
-#spezifisch zu 202101 ist schwierig. Vorhersage sagt nicht aus ob es nur ein Monat ist.
+
 # Wird das Modell m1_1_4_2_3 genommen oder generell die cps_WH_externals Daten?
-
-
 # Modell erstellen
 predictModel = lm(IFR ~ Periode, data = cps_wh_externals)
 
@@ -410,11 +408,13 @@ ggplot(data = NULL, aes(x = predictModel$model$IFR, y = predictModel$residuals))
   geom_smooth(se = FALSE, method = loess) + 
   ggtitle("Plot predictModel") +
   xlab("IFR") + ylab("Residuals")
-
-# Kommentar: Wir gehen die Wette ein, da die Vorhersage ueber 0.85 liegt.
-# DataFrame cps_wh_externals enthealt bereits alle CPS Warehousing-Dienstleister
-# Basierend auf diesen Daten von 2016-2020 wird eine Vorhersage zu 2021 gemacht.
 ```
+Kommentar zu Aufgabe 12: Wir nehmen alle historischen Werte von Januar und
+tun diese Daten in die Vorhersage Funktion, um den Januar 2021 zu bestimmen.
+Wir gehen die Wette ein, da die Vorhersage ueber 0.85 liegt. DataFrame cps_wh_externals enthealt bereits alle CPS Warehousing-Dienstleister. Basierend auf diesen Daten von 2016-2020 wird eine Vorhersage zu 2021 gemacht.
+
+
+
 
 ##Entscheidung
 Antwort zu Aufgabe 13:
