@@ -352,35 +352,49 @@ head(evaluationNeu,2)
 
 11) Bewerten Sie ihr Modell quantitativ im Vergleich mit der Baseline. Bewertungsrelevant: Output, Kommentar.
 ```{r}
-#TODO
-# die anderen Werte wie R^2 bewerten
-  
 # Bewertung von Baseline Modell
 # DataFrame erzeugen
 evaluation = data.frame(Model = "Baseline",
                         MAE = numeric(1),
-                        sMAPE = numeric(1))
+                        sMAPE = numeric(1),
+                        R = numeric(1), 
+                        adjR = numeric(1)
+                        )
 
 # MAE von Baseline Modell berechnen
-evaluation[evaluation$Model == "Baseline",]$MAE = mean(abs(cps_wh_externals_baseline$IFR - cps_wh_externals_baseline$BaselineIFR))
+evaluation[evaluation$Model == "Baseline",]$MAE = 
+  mean(abs(cps_wh_externals$IFR - cps_wh_externals$Baseline))
 
 # sMAPE von Baseline Modell berechnen
-evaluation[evaluation$Model == "Baseline",]$sMAPE = smape(cps_wh_externals_baseline$IFR, cps_wh_externals_baseline$BaselineIFR)
+evaluation[evaluation$Model == "Baseline",]$sMAPE = 
+  smape(cps_wh_externals$IFR, cps_wh_externals$Baseline)
+
+# R^2 und adhjusted R^2 berechnen
+model_1 = lm(IFR ~ Periode, data = cps_wh_externals)
+evaluation[evaluation$Model == "Baseline",]$R = summary(model_1)$r.squared
+evaluation[evaluation$Model == "Baseline",]$adjR =summary(model_1)$adj.r.squared
 
 
 
 # Bewertung von Modell m1_1_4_2_3 aus der 4. Iteration
-evaluation = model_bewertungsfunktion(evaluation, m1_1_4_2_3)
+# evaluation = model_bewertungsfunktion(evaluation, m1_1_4_2_3)
 
 # Fehler der Modelle auf die vierte Nachkommastelle runden
 evaluation[2] = round(evaluation$MAE, 4)
 evaluation[3] = round(evaluation$sMAPE, 4)
+evaluation[4] = round(evaluation$R, 4)
+evaluation[5] = round(evaluation$adjR, 4)
 
 # Vergleich der Fehler beider Modelle anzeigen
 evaluation
-
-# Kommentar: Es gab eine Verbesserung im Modell	m1_1_4_2_3 im Vergleich zur Baseline, da MAE und sMAPE kleiner sind als die Fehlerwerte vom Baseline Modell.
 ```
+```
+### TODO: Vergleich von Baseline und best model R und adjR
+Kommentar: Es gab eine Verbesserung im Modell	m1_1_4_2_3 im Vergleich zur 
+Baseline, da MAE und sMAPE kleiner sind als die Fehlerwerte vom Baseline Modell.
+
+
+
 
 12) Ihre Chefin kommt auf der Firmenfeier zu Ihnen und schlaegt Ihnen eine Wette vor. Sie sagt: “Ich wette mit Ihnen um 100 Euro, dass die IFR des oben betrachteten WH‐DL im naechsten Monat (Januar 2021) in allen Regionen ueber 0.85 sein wird.” Sollten Sie die Wette eingehen? Bewertungsrelevant: Output, Kommentar.
 ```{r}
