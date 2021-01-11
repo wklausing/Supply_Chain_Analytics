@@ -385,22 +385,20 @@ Baseline, da MAE und sMAPE kleiner sind als die Fehlerwerte vom Baseline Modell.
 
 
 12) Ihre Chefin kommt auf der Firmenfeier zu Ihnen und schlaegt Ihnen eine Wette vor. Sie sagt: “Ich wette mit Ihnen um 100 Euro, dass die IFR des oben betrachteten WH‐DL im naechsten Monat (Januar 2021) in allen Regionen ueber 0.85 sein wird.” Sollten Sie die Wette eingehen? Bewertungsrelevant: Output, Kommentar.
+# TODO zusammenfassung von region (und Periode) muessen rein
 ```{r}
-# TODO
-# Wir nehmen zum einen das beste Modell m1_1_4_2_3 und nehmen das generelle Modell aus den cps_WH_externals Daten
-# region (und Periode) muessen rein
-
-
-# Da 202101 auf historische Januars basiert, filtern wir die alten Januars raus
+#TODO
+# Da wir 2021/01 die Werte berechnen wollen, setzen wir fuer unsere Vorhersage die historischen Januars von 2016 bis 2020 voraus
 cps_wh_externals = cps_wh_externals[cps_wh_externals$Month == "1",] 
 
-# Modell erstellen fuer alle Regionen
+# Modell erstellen fuer alle Regionen auf Basis des besten Modells m1_1_4_2_3 und den Baseline Werten
 predictModel = lm(IFR ~ Periode, data = cps_wh_externals)
 predictModelBaseline = lm(Baseline ~ Periode, data = cps_wh_externals)
 
 # predict(model, data)
 predictDFBaseline = 
-  data.frame(predict(predictModelBaseline, data=cps_wh_externals))
+  data.frame(predict(predictModelBaseline, data=cps_wh_externals)) # cps_wh_externals$Region, cps_wh_externals$Periode) %>% unique(.) #%>% aggregate(IFR ~ Periode, data = ., mean)
+
 predictDF_bestmodel = 
   data.frame(predict(m1_1_4_2_3, data=cps_wh_externals))
 
