@@ -262,7 +262,7 @@ evaluation = model_bewertungsfunktion(evaluation,m1_3)
 evaluation = model_bewertungsfunktion(evaluation,m1_4)
 evaluation = model_bewertungsfunktion(evaluation,m1_5)
 #evaluation
-#summary(m1_1)
+summary(m1_1)
 
 # Begruendung: m1_1 hat niedrigstes MAE und sMAPE, daher fahren wir mit 
 # diesem Modell fort. Residual standard error von m1_1 ist zudem das leinste.
@@ -322,15 +322,15 @@ evaluation
 # Test-Set Vorhersagen erstellt werden mit der `predict()` Funktion
 ```{r}
 # Test-Daten
-pred1 = lm(IFR ~ PeriodeNumber + AvgHealth + ParkingSpaceAvailability + 
+pred1 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + 
         InternetStability + Congestion, 
-        data = cps_wh_externalsTest)eval
+        data = cps_wh_externalsTest)
 
 # Vorhersage mit Test-Daten treffen
 pred1 = predict(pred1, cps_wh_externalsTest)  
 
 # Data Frame erweitern
-evaluationNeu = rbind(bestmodel,data.frame(Model = c("pred1_test"),
+evaluationNeu = rbind(data.frame(Model = c("pred1_test"),
                                           MAE = numeric(2),
                                           sMAPE = numeric(2)))
 
@@ -415,32 +415,68 @@ ggplot(data = NULL, aes(x = predictModel$model$IFR, y = predictModel$residuals))
 ```
 
 ##Entscheidung
-
-13) Ihr Regressionsmodell soll im kommenden Jahr implementiert und langfristig in die Unternehmensprozesse integriert werden. Beschreiben Sie, welche Nutzer und Prozesse davon profitieren koennten und in welcher Form die Loesung bereitgestellt werden koennte. Nehmen Sie ausserdem ausfuehrlich zur Phase der Datenbeschaffung Stellung. Bewertungsrelevant: Kommentar.
 Antwort zu Aufgabe 13:
-*Nutzer*: Da unser Regressionsmodell im kommenden Jahr langfristig in die Unternehmensprozesse implementiert wird, stellt sich die Frage, welche Nutzer und welche Prozesse vom Regressionsmodell profitieren koennen und wie sie das Modell verwenden sollen. Hierbei nehmen wir an, dass die
-Geschaeftsfuehrung einen Vorrang auf Informationsbereitstellung hat, da diese Stakeholder wichtige und langfristige Entscheidungen im Unternehmen treffen werden. Diese Entscheidungen koennen sie mit Hilfe des Regressionsmodells treffen, da das Modell den Einfluss der Externen Effekte auf die Leistung der Logistikdienstleister uebersichtlich darstellt. Dabei wurden fuenf externe Effekte identifiziert, die vergleichsweise einen deutlichen Einfluss auf die Logistikdienstleister haben.
-Weitere Nutzer koennen neben der Geschaeftsfuehrung auch die Abteilungen der Logistik sowie Finanzen sein, da das Modell wichtige Logistik-Kennzahlen wie das Iten Fill Rate (IFR) abbildet.
-*Prozesse*: Anhand des Regressionsmodells kann beispielsweise die Logistik-Abteilung Abschaetzungen machen, welche Leistungen der Logistikdienstleister in welchem Zeitraum durchfuehrt und durch welche externen Faktoren beeinflusst wird. Hierbei kann die Logistik-Abteilung die Lieferprozesse sowie SLAs somit besser steuern. Da wir jetzt diese fuenf externen Faktoren wie: Periode, AvgHealth, ParkingSpaceAvailability, InternetStability und Congestion in unserem Modell abgebildet haben.
-*Loesung Bereitstellung*:
-*Datenbeschaffgung*:
-Phase der Datenbeschaffung:
-- Datum (Periode kombinieren)
-- Merge() von Periode und externen Faktoren
-- CPS-WL und Region Japan filtern für Aufgabe 10 relevant
-- Normalisierung
-- Datentyp ändern (hier nicht berücksichtigt)
-. Variablen transformieren (hier nicht berücksichtigt)
-- Variablen kombinieren und Modell erstellen
+*Nutzer*: Da unser Regressionsmodell im kommenden Jahr langfristig in die 
+Unternehmensprozesse implementiert werden soll, stellt sich die Frage, 
+welche Nutzer und welche Prozesse vom Regressionsmodell profitieren koennen, 
+und in welcher Form die Loesung bereitgestellt werden soll. 
+Hierbei nehmen wir an, dass die Geschaeftsfuehrung einen Vorrang auf Informationsbereitstellung hat, da diese Stakeholder wichtige und 
+langfristige Entscheidungen im Unternehmen treffen werden. 
+Diese Entscheidungen koennen sie mit Hilfe des Regressionsmodells treffen, da 
+das Modell eine Uebersicht ueber den Einfluss der Externen Effekte auf die 
+Leistung der Logistikdienstleister darstellt. Dabei wurden fuenf externe 
+Effekte identifiziert, die vergleichsweise den groeßten Einfluss auf die Logistikdienstleister haben.Weitere Nutzer koennen neben der Geschaeftsfuehrung 
+auch die Abteilungen der Logistik sowie Finanz-Abteilung sein,da das Modell 
+wichtige Logistik-Kennzahlen wie das Iten Fill Rate (IFR) abbildet.
+*Prozesse*: Anhand des Regressionsmodells kann beispielsweise die Logistik-
+Abteilung Abschaetzungen machen, wie die Leistungen der Logistikdienstleister in 
+einem bestimmten Zeitraum war und durch welche externen Faktoren diese Leistung beeinflusst wurde. Hierbei kann die Logistik-Abteilung beispielsweise die Lieferprozesse sowie SLAs durch die Erkenntnisgewinnung besser steuern. Wir 
+haben diese fuenf externen Faktoren: Periode, AvgHealth, 
+ParkingSpaceAvailability, InternetStability und Congestion in unserem 
+Modell abgebildet.
+*Loesungsbereitstellung*: Die Loesungsbereitstellung kann in verschiedenen 
+Formen erfolgen. Da unser Modell auf R basiert, koennen wir Visualisierungs-
+software, wie z.B. MicroStrategy oder Microsoft Power BI, verwenden unter der
+Bedingung, dass die Lizensen und der Zugang im Unternehmen vorhanden sind.
+Andernfalls kann die Loesungsbereitstellung auf ueber Excel oder R-Studio 
+erfolgen. Von PDF oder Papier Präsentation des Modells raten wir ab.
 
-
-####
-Allgemein: 
-Korrelation zwischen zwei Variablen ist eine Messung für Assoziationen zwischen IFR und einer weiteren Variable (Externe Faktoren) Item Fill Rate (IFR). Wir untersuchen die Korrelation zwischen IFR und den externen Faktoren hat. Die Korrelation ist keine Messung fuer Kausalitaet. Wenn IFR mit den externen Faktoren korreliert, dann kann es auf verschiedene kausale Beziehungen zurueckfuehren. In unserem Fall kann eine hohe Korrelation entweder durch Zufallentstehen und beschreibt keinen stabilen Zusammenhang, oder die Korrelation ist auf einen kausalen Zusammenhang zurueckzufuehren, aber die Richtung ist nicht eindeutig.
-
-####
-Sie haben nun etwas Erfahrung auf dem Gebiet der Distribution von “Limonalytics”. Obwohl Sie stets gewissenhaft fuer die naechsten Monate im Voraus planen, schwankt die Leistung der Logistikdienstleister stark. Daher sollen Sie ein Modell aufstellen, um deren Leistung auf Basis von externen Effekten abzuschaetzen. Sie erhalten daher die externen Effekte der letzten 60 Monate (2016‐2020) sowie die Vorhersage fuer die kommenden 12 Monate (2021). Die Vorhersage der externen Effekte fuer die naechsten Monate ist ‐ selbstverstaendlich ‐ ungenau und ebenso mit statistischen Verfahren erstellt. Dies ist fuer Sie jedoch innerhalb der Analyse nicht relevant. Es sollte jedoch in Ihrer Entscheidung kurz reflektiert werden.
-####
+*Stellungnahme zur Datenbeschaffung*:
+Bei der Datenbeschaffung gehen wir entlang der folgenden Phasen vor.
+1. Unternehmen verstehen / Zielsetzung: 
+Zuerst muessen wir das Unternehmen besser verstehen, um herauszufinden, welches 
+Ziel wir verfolgen. Bei der Distribution von “Limonalytics” wollen wir fuer die naechsten Monate im Voraus planen und ein Modell erstellen, um deren Leistung 
+auf Basis von externen Effekten abzuschaetzen. Das Ziel ist hierbei anhand eines Regressionsmodells zukuenftige Entscheidungen fundiert und effizient abzuleiten.
+Hierbei schauen wir uns die externen Effekte der letzten 60 Monate (2016‐2020)
+an sowie die Vorhersage fuer die kommenden 12 Monate (2021).
+2. Daten sammeln: Da wir zuerst eine große Datensammlung benoetigen, um sie
+weiter zu verarbeiten, fokussieren wir uns auf die Logistikzentralen an den
+jeweiligen Standorten, die uns Daten zu den Logistik-Dienstleistungen beschaffen 
+koennen. Andernfalls wuerden wir auf unseren lokalen Servern Durchsuchungen 
+bestreben, Befragungen bei der Logistikabteilung durchfuehren, um mehr Daten
+zu externen Faktoren sammeln zu koennen oder uns an externe Datenquellen wie 
+z.B. Statista, wenden.
+3. Daten-Analyse: Bei der Datenbeschaffung ist es wichtig die Daten immer wieder
+zu analysieren, um die Datenqualitaet zu erhoehen und falsche Vorhersagen zu vermeiden. Nach der Datenanalyse kommt im naechsten Schritt die Datenbereinigung sowie Datentransformation, um unseren aktuellen Unternehmenszustand sowie 
+Vorhersage so praezise wie moeglich abzubilden.
+4. Kennzahlen festlegen: Um weitere moeglichen relevanten Daten zu beschaffen,
+wuerden wir als naechstes Kennzahlen festlegen. 
+Der Zeitraum der Datensaetze ist bekannt und liegt zwischen 2016 und 2021.
+Da Logistikdienstleistungen nicht immer mit Daten von externen Faktoren zu-
+sammengefasst sind, wuerden wir DL und externen Faktoren basierend auf den
+Perioden zusammenfassen. Je nach Ziel beschraenken wir uns auf bestimmte 
+Regionen und Dienstleister. 
+Da wir die Leistung auf Basis von externen Effekten abschaetzen wollen, wuerden 
+wir uns genauer anschauen, welche externen Faktoren den groeßten Einfluss haben. 
+Wir berechnen die Korrelation zwischen zwei Variablen, d.h. 
+zwischen Item Fill Rate (IFR) und einer weiteren Variable (externe Faktoren). 
+Wir erstellen Modelle, um IFR mit den externen Faktoren zusammen abzubilden. 
+Um weitere Erkenntnisse zu schließen, wuerden wir weitere Kombinationen aus 
+IFR mit den verschiedenen externen Faktoren modellieren. Die Kombination mit den 
+groeßten Einfluss auf die Leistung der Logistik-Dienstleister schauen wir uns
+genauer an. Da wir jedoch hier nur auf die Datenbeschaffung eingehen sollen,
+wollen wir die Erklaerung zum Modelling, Testing und Bewertung hier nicht
+mehr weiterfortfuehren.
 
 
 
