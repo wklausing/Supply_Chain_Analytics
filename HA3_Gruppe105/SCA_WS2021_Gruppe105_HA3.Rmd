@@ -485,5 +485,285 @@ mehr weiterfortfuehren.
 
 
 
+# TODO generell Begründen wie sich R und adjR verhält
 
+### Aufgabe 10: Modelle erstellen mit Forward Selection Variante der Wrapper Methode
+```{r}
+# 1. Iteration
+# Modelle erstellen mit untransformierter unabhaengiger Variable
+# Wir betrachten jeweils nur ein Merkmal (univariater Datenanalyse)
+m1_1 = lm(IFR ~ AvgHealth, data = cps_wh_externalsTraining)
+m1_2 = lm(IFR ~ InternetStability, data = cps_wh_externalsTraining)
+m1_3 = lm(IFR ~ BusinessConfidence, data = cps_wh_externalsTraining)
+m1_4 = lm(IFR ~ ParkingSpaceAvailability, data = cps_wh_externalsTraining)
+m1_5 = lm(IFR ~ Congestion, data = cps_wh_externalsTraining)
+
+# DF erweitern
+evaluation = rbind(data.frame(
+                   Model = c("m1_1", "m1_2", "m1_3", "m1_4", "m1_5"),
+                   MAE = numeric(1), 
+                   sMAPE = numeric(1),
+                   R = numeric(1), 
+                   adjR = numeric(1))) 
+# MAE berechnen
+evaluation[evaluation$Model == "m1_1",]$MAE = mean(abs(m1_1$residuals)) 
+evaluation[evaluation$Model == "m1_2",]$MAE = mean(abs(m1_2$residuals)) 
+evaluation[evaluation$Model == "m1_3",]$MAE = mean(abs(m1_3$residuals)) 
+evaluation[evaluation$Model == "m1_4",]$MAE = mean(abs(m1_4$residuals)) 
+evaluation[evaluation$Model == "m1_5",]$MAE = mean(abs(m1_5$residuals)) 
+
+# sMAPE berechnen
+evaluation[evaluation$Model == "m1_1",]$sMAPE = smape(m1_1$model$IFR, m1_1$fitted.values)
+evaluation[evaluation$Model == "m1_2",]$sMAPE = smape(m1_2$model$IFR, m1_2$fitted.values) 
+evaluation[evaluation$Model == "m1_3",]$sMAPE = smape(m1_3$model$IFR, m1_3$fitted.values) 
+evaluation[evaluation$Model == "m1_4",]$sMAPE = smape(m1_4$model$IFR, m1_4$fitted.values) 
+evaluation[evaluation$Model == "m1_5",]$sMAPE = smape(m1_5$model$IFR, m1_5$fitted.values) 
+
+#R^2 berechnen
+evaluation[evaluation$Model == "m1_1",]$R = summary(m1_1)$r.squared
+evaluation[evaluation$Model == "m1_2",]$R = summary(m1_2)$r.squared
+evaluation[evaluation$Model == "m1_3",]$R = summary(m1_3)$r.squared
+evaluation[evaluation$Model == "m1_4",]$R = summary(m1_4)$r.squared
+evaluation[evaluation$Model == "m1_5",]$R = summary(m1_5)$r.squared
+
+# adjusted R^2 berechnen
+evaluation[evaluation$Model == "m1_1",]$adjR = summary(m1_1)$adj.r.squared 
+evaluation[evaluation$Model == "m1_2",]$adjR = summary(m1_2)$adj.r.squared 
+evaluation[evaluation$Model == "m1_3",]$adjR = summary(m1_3)$adj.r.squared 
+evaluation[evaluation$Model == "m1_4",]$adjR = summary(m1_4)$adj.r.squared 
+evaluation[evaluation$Model == "m1_5",]$adjR = summary(m1_5)$adj.r.squared 
+
+# Runden auf die 4. Nachkommastelle
+evaluation[2] = round(evaluation$MAE, 4)
+evaluation[3] = round(evaluation$sMAPE , 4)
+evaluation[4] = round(evaluation$R, 4)
+evaluation[5] = round(evaluation$adjR, 4)
+evaluation
+
+# Kommentar: Wir entscheiden uns fuer das Model m1_1 mit den niedrigsten MAE und sMAPE.
+```
+
+
+```{r}
+# 2. Iteration
+m1_1_2 = lm(IFR ~ AvgHealth + InternetStability, 
+            data = cps_wh_externalsTraining)
+m1_1_3 = lm(IFR ~ AvgHealth + BusinessConfidence, 
+            data = cps_wh_externalsTraining)
+m1_1_4 = lm(IFR ~ AvgHealth + ParkingSpaceAvailability, 
+            data = cps_wh_externalsTraining)
+m1_1_5 = lm(IFR ~ AvgHealth + Congestion, 
+            data = cps_wh_externalsTraining)
+
+# DF erweitern
+evaluation = rbind(data.frame(
+                   Model = c("m1_1_2", "m1_1_3", "m1_1_4", "m1_1_5"),
+                   MAE = numeric(1), 
+                   sMAPE = numeric(1),
+                   R = numeric(1), 
+                   adjR = numeric(1))) 
+# MAE berechnen
+evaluation[evaluation$Model == "m1_1_2",]$MAE = mean(abs(m1_1_2$residuals)) 
+evaluation[evaluation$Model == "m1_1_3",]$MAE = mean(abs(m1_1_3$residuals)) 
+evaluation[evaluation$Model == "m1_1_4",]$MAE = mean(abs(m1_1_4$residuals)) 
+evaluation[evaluation$Model == "m1_1_5",]$MAE = mean(abs(m1_1_5$residuals)) 
+
+# sMAPE berechnen
+evaluation[evaluation$Model == "m1_1_2",]$sMAPE = 
+  smape(m1_1_2$model$IFR, m1_1_2$fitted.values)
+evaluation[evaluation$Model == "m1_1_3",]$sMAPE = 
+  smape(m1_1_3$model$IFR, m1_1_3$fitted.values)
+evaluation[evaluation$Model == "m1_1_4",]$sMAPE = 
+  smape(m1_1_4$model$IFR, m1_1_4$fitted.values)
+evaluation[evaluation$Model == "m1_1_5",]$sMAPE = 
+  smape(m1_1_5$model$IFR, m1_1_5$fitted.values) 
+
+#R^2 berechnen
+evaluation[evaluation$Model == "m1_1_2",]$R = summary(m1_1_2)$r.squared
+evaluation[evaluation$Model == "m1_1_3",]$R = summary(m1_1_3)$r.squared
+evaluation[evaluation$Model == "m1_1_4",]$R = summary(m1_1_4)$r.squared
+evaluation[evaluation$Model == "m1_1_5",]$R = summary(m1_1_5)$r.squared
+
+# adjusted R^2 berechnen
+evaluation[evaluation$Model == "m1_1_2",]$adjR = summary(m1_1_2)$adj.r.squared 
+evaluation[evaluation$Model == "m1_1_3",]$adjR = summary(m1_1_3)$adj.r.squared 
+evaluation[evaluation$Model == "m1_1_4",]$adjR = summary(m1_1_4)$adj.r.squared 
+evaluation[evaluation$Model == "m1_1_5",]$adjR = summary(m1_1_5)$adj.r.squared 
+
+# Runden auf die 4. Nachkommastelle
+evaluation[2] = round(evaluation$MAE, 4)
+evaluation[3] = round(evaluation$sMAPE , 4)
+evaluation[4] = round(evaluation$R, 4)
+evaluation[5] = round(evaluation$adjR, 4)
+evaluation
+
+# Kommentar: Das Model m1_1_4 hat niedrigstes MAE und sMAPE, daher fahren wir mit diesem Modell fort.
+```
+```{r}
+# 3. Iteration
+m1_1_4_2 = lm(IFR ~ AvgHealth + ParkingSpaceAvailability + 
+                InternetStability, data = cps_wh_externalsTraining)
+m1_1_4_3 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + 
+                BusinessConfidence, data = cps_wh_externalsTraining)
+m1_1_4_5 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + 
+                Congestion, data = cps_wh_externalsTraining)
+
+# DF erweitern
+evaluation = rbind(data.frame(
+                   Model = c("m1_1_4_2", "m1_1_4_3", "m1_1_4_5"),
+                   MAE = numeric(1), 
+                   sMAPE = numeric(1),
+                   R = numeric(1), 
+                   adjR = numeric(1))) 
+# MAE berechnen
+evaluation[evaluation$Model == "m1_1_4_2",]$MAE = mean(abs(m1_1_4_2$residuals)) 
+evaluation[evaluation$Model == "m1_1_4_3",]$MAE = mean(abs(m1_1_4_3$residuals)) 
+evaluation[evaluation$Model == "m1_1_4_5",]$MAE = mean(abs(m1_1_4_5$residuals)) 
+
+# sMAPE berechnen
+evaluation[evaluation$Model == "m1_1_4_2",]$sMAPE = 
+  smape(m1_1_4_2$model$IFR, m1_1_2$fitted.values)
+evaluation[evaluation$Model == "m1_1_4_3",]$sMAPE = 
+  smape(m1_1_4_3$model$IFR, m1_1_3$fitted.values)
+evaluation[evaluation$Model == "m1_1_4_5",]$sMAPE = 
+  smape(m1_1_4_5$model$IFR, m1_1_4$fitted.values)
+
+#R^2 berechnen
+evaluation[evaluation$Model == "m1_1_4_2",]$R = summary(m1_1_4_2)$r.squared
+evaluation[evaluation$Model == "m1_1_4_3",]$R = summary(m1_1_4_3)$r.squared
+evaluation[evaluation$Model == "m1_1_4_5",]$R = summary(m1_1_4_5)$r.squared
+
+# adjusted R^2 berechnen
+evaluation[evaluation$Model == "m1_1_4_2",]$adjR = summary(m1_1_4_2)$adj.r.squared 
+evaluation[evaluation$Model == "m1_1_4_3",]$adjR = summary(m1_1_4_3)$adj.r.squared 
+evaluation[evaluation$Model == "m1_1_4_5",]$adjR = summary(m1_1_4_5)$adj.r.squared 
+
+# Runden auf die 4. Nachkommastelle
+evaluation[2] = round(evaluation$MAE, 4)
+evaluation[3] = round(evaluation$sMAPE , 4)
+evaluation[4] = round(evaluation$R, 4)
+evaluation[5] = round(evaluation$adjR, 4)
+evaluation
+
+# Kommentar: m1_1_4_3 hat niedrigstes sMAPE, jedoch ist das MAE von m1_1_4_2 niedriger. Wir entscheiden uns aber mit m1_1_4_2 weiterzumachen, da das R zum Beispiel auch hoeher ist und somit dieses Regressionsmodell besser ist.
+```
+```{r}
+ # 4. Iteration
+m1_1_4_2_3 = lm(IFR ~ AvgHealth + ParkingSpaceAvailability + 
+        InternetStability + BusinessConfidence, data = cps_wh_externalsTraining)
+m1_1_4_2_5 = lm(IFR ~ Periode + AvgHealth + ParkingSpaceAvailability + 
+        InternetStability + Congestion, data = cps_wh_externalsTraining)
+
+# DF erweitern
+evaluation = rbind(data.frame(
+                   Model = c("m1_1_4_2_3", "m1_1_4_2_5"),
+                   MAE = numeric(1), 
+                   sMAPE = numeric(1),
+                   R = numeric(1), 
+                   adjR = numeric(1))) 
+# MAE berechnen
+evaluation[evaluation$Model == "m1_1_4_2_3",]$MAE = mean(abs(m1_1_4_2_3$residuals)) 
+evaluation[evaluation$Model == "m1_1_4_2_5",]$MAE = mean(abs(m1_1_4_2_5$residuals)) 
+
+# sMAPE berechnen
+evaluation[evaluation$Model == "m1_1_4_2_3",]$sMAPE = 
+  smape(m1_1_4_2_3$model$IFR, m1_1_4_2_3$fitted.values)
+evaluation[evaluation$Model == "m1_1_4_2_5",]$sMAPE = 
+  smape(m1_1_4_2_5$model$IFR, m1_1_4_2_5$fitted.values)
+
+#R^2 berechnen
+evaluation[evaluation$Model == "m1_1_4_2_3",]$R = summary(m1_1_4_2_3)$r.squared
+evaluation[evaluation$Model == "m1_1_4_2_5",]$R = summary(m1_1_4_2_5)$r.squared
+
+# adjusted R^2 berechnen
+evaluation[evaluation$Model == "m1_1_4_2_3",]$adjR = summary(m1_1_4_2_3)$adj.r.squared 
+evaluation[evaluation$Model == "m1_1_4_2_5",]$adjR = summary(m1_1_4_2_5)$adj.r.squared 
+
+# Runden auf die 4. Nachkommastelle
+evaluation[2] = round(evaluation$MAE, 4)
+evaluation[3] = round(evaluation$sMAPE , 4)
+evaluation[4] = round(evaluation$R, 4)
+evaluation[5] = round(evaluation$adjR, 4)
+evaluation
+
+# Kommentar: m1_1_4_2_3 und m1_1_4_2_5 haben den selben MAE und sMAPE wert, sowie den selben R und adjusted R Wert. Daher spielt es keine Rolle welchen wir nehmen. Wir fahren mit m1_1_4_2_3 fort.
+```
+```{r}
+# 5. Iteration
+m1_1_4_2_3_5 = lm(IFR ~ AvgHealth + ParkingSpaceAvailability + 
+                    InternetStability + BusinessConfidence + Congestion, 
+                    data = cps_wh_externalsTraining)
+
+# DF erweitern
+evaluation = rbind(data.frame(
+                   Model = c("m1_1_4_2_3_5"),
+                   MAE = numeric(1), 
+                   sMAPE = numeric(1),
+                   R = numeric(1), 
+                   adjR = numeric(1))) 
+# MAE berechnen
+evaluation[evaluation$Model == "m1_1_4_2_3_5",]$MAE = 
+  mean(abs(m1_1_4_2_3_5$residuals)) 
+
+# sMAPE berechnen
+evaluation[evaluation$Model == "m1_1_4_2_3_5",]$sMAPE = 
+  smape(m1_1_4_2_3_5$model$IFR, m1_1_4_2_3_5$fitted.values)
+
+#R^2 berechnen
+evaluation[evaluation$Model == "m1_1_4_2_3_5",]$R = 
+  summary(m1_1_4_2_3_5)$r.squared
+
+# adjusted R^2 berechnen
+evaluation[evaluation$Model == "m1_1_4_2_3_5",]$adjR = 
+  summary(m1_1_4_2_3_5)$adj.r.squared 
+
+# Runden auf die 4. Nachkommastelle
+evaluation[2] = round(evaluation$MAE, 4)
+evaluation[3] = round(evaluation$sMAPE , 4)
+evaluation[4] = round(evaluation$R, 4)
+evaluation[5] = round(evaluation$adjR, 4)
+evaluation
+
+# Kommentar: m1_1_4_2_3_5 hat keine bis kaum Verbesserung gebracht, daher gehen wir zurück zu m1_1_4_2_3 und bleiben dabei.
+```
+
+*Overfitting ueberpruefen*
+Wir vergleichen Trainings- und Test-Daten und bewerten die zwei Modelle.
+Dabei ueberpruefen wir das endgueltige Modell Modell m1_1_4_2_3 am Ende auf 
+Overfitting indem die Fehlerkennzahlen fuer TestSet berechnen. Dies verlangt, 
+dass fuer das TestSet Vorhersagen erstellt werden mit der `predict()` Funktion
+```{r}
+# Bestes Modell aus evaluation filtern und am Ende an dem TestSet anhaengen
+evaluation = data.frame(subset(evaluation, Model == "m1_1_4_2_3"))
+
+# Test-Daten mit der Kombination aus dem besten Modell
+pred1 = lm(IFR ~ AvgHealth + ParkingSpaceAvailability + 
+        InternetStability + Congestion, 
+        data = cps_wh_externalsTest)
+
+# Vorhersage mit Test-Daten treffen
+pred1 = predict(pred1, cps_wh_externalsTest)  
+
+# Data Frame erweitern
+evaluationNeu = rbind(data.frame(Model = c("Test_Model"),
+                                          MAE = numeric(1),
+                                          sMAPE = numeric(1)))
+# MAE berechnen
+evaluationNeu[evaluationNeu$Model == "Test_Model", ]$MAE = 
+                                    mean(abs(cps_wh_externalsTest$IFR - pred1))
+# sMAPE berechnen
+evaluationNeu[evaluationNeu$Model == "Test_Model", ]$sMAPE = 
+                                    smape(cps_wh_externalsTest$IFR, pred1)
+
+# Zeilen der Fehlerkennzahlen des besten Modells und des Test-Modells verbinden
+x = rbind(evaluation, evaluationNeu)
+
+# Runden und anzeigen
+x[2] = round(x$MAE, 4)
+x[3] = round(x$sMAPE, 4)
+
+# Tabellenkopf anzeigen
+x
+
+# Kommentar: Das beste Modell m1_1_4_2_3_5 und das jetzige Test-Modell weisen aehnliche Zahlen auf. Ein Overfitting ist hierbei nicht zu finden.
 
