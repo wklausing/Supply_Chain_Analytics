@@ -727,6 +727,18 @@ evaluation
 # Kommentar: m1_1_4_2_3_5 hat keine bis kaum Verbesserung gebracht, daher gehen wir zurück zu m1_1_4_2_3 und bleiben dabei.
 ```
 
+```{r}
+summary(m1_1_4)
+summary(m1_1_4_2_3)
+```
+Kommentar: Bei der genauen Analyse der Modelle stellen wir fest, dass das 
+Multiple R-squared und Adjusted R-squared von Modell m1_1_4_2_3 hoeher ist als 
+das von Modell m1_1_4. Dies spricht dafuer, dass das Modell eine bessere Vorhersagegenauigkeit hat, die sich durch die zusaetzlichen Variablen verbessert 
+hat. Das Residual standard error ist bei dem verbesserten Modell kleiner als bei 
+dem anfaenglichen Modell m1_1_4, was auch ein Indiz dafuer ist, dass wir das 
+Modell m1_1_4_2_3 weitehrin verwenden sollten.
+
+
 *Overfitting ueberpruefen*
 Wir vergleichen Trainings- und Test-Daten und bewerten die zwei Modelle.
 Dabei ueberpruefen wir das endgueltige Modell Modell m1_1_4_2_3 am Ende auf 
