@@ -418,51 +418,62 @@ Kommentar zu Aufgabe 12: Wir nehmen alle historischen Werte von Januar, um den J
 
 
 
+## Entscheidung
 
-##Entscheidung
+### Aufgabe 13: Regressionsmodell Implementierung in Unternehmensprozess
 Antwort zu Aufgabe 13:
 *Nutzer*: Da unser Regressionsmodell im kommenden Jahr langfristig in die 
-Unternehmensprozesse implementiert werden soll, stellt sich die Frage, 
+Unternehmensprozesse implementiert werden soll, stellen wir uns die Fragen, 
 welche Nutzer und welche Prozesse vom Regressionsmodell profitieren koennen, 
 und in welcher Form die Loesung bereitgestellt werden soll. 
-Hierbei nehmen wir an, dass die Geschaeftsfuehrung einen Vorrang auf Informationsbereitstellung hat, da diese Stakeholder wichtige und 
+Hierbei nehmen wir an, dass die Geschaeftsfuehrung einen Vorrang auf 
+Informationsbereitstellung hat, da diese Stakeholder wichtige und 
 langfristige Entscheidungen im Unternehmen treffen werden. 
 Diese Entscheidungen koennen sie mit Hilfe des Regressionsmodells treffen, da 
 das Modell eine Uebersicht ueber den Einfluss der Externen Effekte auf die 
 Leistung der Logistikdienstleister darstellt. Dabei wurden fuenf externe 
-Effekte identifiziert, die vergleichsweise den groeßten Einfluss auf die Logistikdienstleister haben.Weitere Nutzer koennen neben der Geschaeftsfuehrung 
-auch die Abteilungen der Logistik sowie Finanz-Abteilung sein,da das Modell 
-wichtige Logistik-Kennzahlen wie das Iten Fill Rate (IFR) abbildet.
+Effekte identifiziert, die vergleichsweise den groeßten Einfluss auf die 
+Logistikdienstleister haben. Weitere Nutzer koennen neben der Geschaeftsfuehrung 
+auch die Abteilungen der Logistik sowie Finanz-Abteilung sein, da das Modell 
+wichtige Logistik-Kennzahlen wie das IFR abbildet.
 *Prozesse*: Anhand des Regressionsmodells kann beispielsweise die Logistik-
 Abteilung Abschaetzungen machen, wie die Leistungen der Logistikdienstleister in 
-einem bestimmten Zeitraum war und durch welche externen Faktoren diese Leistung beeinflusst wurde. Hierbei kann die Logistik-Abteilung beispielsweise die Lieferprozesse sowie SLAs durch die Erkenntnisgewinnung besser steuern. Wir 
-haben diese fuenf externen Faktoren: Periode, AvgHealth, 
-ParkingSpaceAvailability, InternetStability und Congestion in unserem 
-Modell abgebildet.
+einem bestimmten Zeitraum war und durch welche externen Faktoren diese Leistung 
+beeinflusst wurde. Hierbei kann die Logistik-Abteilung beispielsweise durch die 
+Erkenntnisgewinnung die Lieferprozesse besser bewerten und steuern und mit den 
+Logistikdienstleistern bessere SLA Bedingungen aushandeln. 
+Wir fokussieren uns auf diese fuenf externen Faktoren: Periode, AvgHealth, 
+ParkingSpaceAvailability, InternetStability und Congestion, die in unserem 
+Modell abgebildet sind.
 *Loesungsbereitstellung*: Die Loesungsbereitstellung kann in verschiedenen 
 Formen erfolgen. Da unser Modell auf R basiert, koennen wir Visualisierungs-
 software, wie z.B. MicroStrategy oder Microsoft Power BI, verwenden unter der
 Bedingung, dass die Lizensen und der Zugang im Unternehmen vorhanden sind.
-Andernfalls kann die Loesungsbereitstellung auf ueber Excel oder R-Studio 
+Andernfalls kann die Loesungsbereitstellung auch ueber Excel oder R-Studio 
 erfolgen. Von PDF oder Papier Präsentation des Modells raten wir ab.
-
 *Stellungnahme zur Datenbeschaffung*:
 Bei der Datenbeschaffung gehen wir entlang der folgenden Phasen vor.
 1. Unternehmen verstehen / Zielsetzung: 
-Zuerst muessen wir das Unternehmen besser verstehen, um herauszufinden, welches 
-Ziel wir verfolgen. Bei der Distribution von “Limonalytics” wollen wir fuer die naechsten Monate im Voraus planen und ein Modell erstellen, um deren Leistung 
-auf Basis von externen Effekten abzuschaetzen. Das Ziel ist hierbei anhand eines Regressionsmodells zukuenftige Entscheidungen fundiert und effizient abzuleiten.
-Hierbei schauen wir uns die externen Effekte der letzten 60 Monate (2016‐2020)
-an sowie die Vorhersage fuer die kommenden 12 Monate (2021).
-2. Daten sammeln: Da wir zuerst eine große Datensammlung benoetigen, um sie
-weiter zu verarbeiten, fokussieren wir uns auf die Logistikzentralen an den
-jeweiligen Standorten, die uns Daten zu den Logistik-Dienstleistungen beschaffen 
-koennen. Andernfalls wuerden wir auf unseren lokalen Servern Durchsuchungen 
-bestreben, Befragungen bei der Logistikabteilung durchfuehren, um mehr Daten
-zu externen Faktoren sammeln zu koennen oder uns an externe Datenquellen wie 
-z.B. Statista, wenden.
+Zuerst muessen wir das Unternehmen besser verstehen, um festzulegen, welche
+Daten wir benoetigen. Generell wollen wir bei der Distribution von Limonalytics 
+fuer die naechsten Monate im Voraus planen und ein Modell erstellen, um deren 
+Leistung auf Basis von externen Effekten abzuschaetzen. 
+Das Ziel ist hierbei anhand eines Regressionsmodells zukuenftige Entscheidungen 
+fundiert und effizient abzuleiten.
+Hierbei schauen wir uns bei der Datenbeschaffung die externen Effekte der 
+letzten 60 Monate (2016‐2020) an sowie die Leistungen der jeweiligen 
+Logistikdienstleister in den jeweiligen Regionen.
+2. Daten sammeln: Fuer unsere Datensammlung benoetigen Daten aus verschiedenen 
+Bereichen. Wir fokussieren uns auf die Logistikzentralen an den jeweiligen 
+Standorten, die uns Daten zu den Logistik-Dienstleistungen und externen Faktoren 
+beschaffen koennten. Andernfalls wuerden wir auf unseren lokalen Servern 
+Durchsuchungen bestreben, Befragungen bei der Logistikabteilung durchfuehren, 
+um mehr Daten zu externen Faktoren und Logstikdienstleistungen sammeln zu 
+koennen oder uns an externe Datenquellen im Internet wenden.
 3. Daten-Analyse: Bei der Datenbeschaffung ist es wichtig die Daten immer wieder
-zu analysieren, um die Datenqualitaet zu erhoehen und falsche Vorhersagen zu vermeiden. Nach der Datenanalyse kommt im naechsten Schritt die Datenbereinigung sowie Datentransformation, um unseren aktuellen Unternehmenszustand sowie 
+zu analysieren, um die Datenqualitaet zu erhoehen und falsche Vorhersagen zu 
+vermeiden. Nach der Datenanalyse kommt im naechsten Schritt die Datenbereinigung 
+sowie Datentransformation, um unseren aktuellen Unternehmenszustand sowie 
 Vorhersage so praezise wie moeglich abzubilden.
 4. Kennzahlen festlegen: Um weitere moeglichen relevanten Daten zu beschaffen,
 wuerden wir als naechstes Kennzahlen festlegen. 
@@ -473,13 +484,7 @@ Perioden zusammenfassen. Je nach Ziel beschraenken wir uns auf bestimmte
 Regionen und Dienstleister. 
 Da wir die Leistung auf Basis von externen Effekten abschaetzen wollen, wuerden 
 wir uns genauer anschauen, welche externen Faktoren den groeßten Einfluss haben. 
-Wir berechnen die Korrelation zwischen zwei Variablen, d.h. 
-zwischen Item Fill Rate (IFR) und einer weiteren Variable (externe Faktoren). 
-Wir erstellen Modelle, um IFR mit den externen Faktoren zusammen abzubilden. 
-Um weitere Erkenntnisse zu schließen, wuerden wir weitere Kombinationen aus 
-IFR mit den verschiedenen externen Faktoren modellieren. Die Kombination mit den 
-groeßten Einfluss auf die Leistung der Logistik-Dienstleister schauen wir uns
-genauer an. Da wir jedoch hier nur auf die Datenbeschaffung eingehen sollen,
+Da wir jedoch hier nur auf die Datenbeschaffung eingehen sollen,
 wollen wir die Erklaerung zum Modelling, Testing und Bewertung hier nicht
 mehr weiterfortfuehren.
 
@@ -688,6 +693,7 @@ evaluation
 
 # Kommentar: m1_1_4_2_3 und m1_1_4_2_5 haben den selben MAE und sMAPE wert, sowie den selben R und adjusted R Wert. Daher spielt es keine Rolle welchen wir nehmen. Wir fahren mit m1_1_4_2_3 fort.
 ```
+
 ```{r}
 # 5. Iteration
 m1_1_4_2_3_5 = lm(IFR ~ AvgHealth + ParkingSpaceAvailability + 
@@ -733,7 +739,8 @@ summary(m1_1_4_2_3)
 ```
 Kommentar: Bei der genauen Analyse der Modelle stellen wir fest, dass das 
 Multiple R-squared und Adjusted R-squared von Modell m1_1_4_2_3 hoeher ist als 
-das von Modell m1_1_4. Dies spricht dafuer, dass das Modell eine bessere Vorhersagegenauigkeit hat, die sich durch die zusaetzlichen Variablen verbessert 
+das von Modell m1_1_4. Dies spricht dafuer, dass das Modell eine bessere 
+Vorhersagegenauigkeit hat, die sich durch die zusaetzlichen Variablen verbessert 
 hat. Das Residual standard error ist bei dem verbesserten Modell kleiner als bei 
 dem anfaenglichen Modell m1_1_4, was auch ein Indiz dafuer ist, dass wir das 
 Modell m1_1_4_2_3 weitehrin verwenden sollten.
