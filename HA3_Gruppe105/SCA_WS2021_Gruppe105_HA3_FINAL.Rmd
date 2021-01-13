@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Datenanalyse
 
 ```{r}
+rm(list = ls())
 #library("tidyverse")
 library("dummies")
 library("ggplot2")
@@ -146,14 +147,16 @@ head(correlations_ordered, 5)
 ```
 (c) Korrelations‐Plot fuer diese 5 externen Faktoren
 ```{r}
+#TODO IFR hat gefehlt
 # Correlation Plot erzeugen 
-ggpairs(cps_wh_externals[, c("AvgHealth", "InternetStability", 
-                             "BusinessConfidence", "ParkingSpaceAvailability",                                          "Congestion")], 
+ggpairs(cps_wh_externals[, c("IFR","AvgHealth", "InternetStability", 
+                             "BusinessConfidence", "ParkingSpaceAvailability", "Congestion")], 
         
 # ohne Visualisierung des Fortschritts der Erstellung des plots
 progress = FALSE,
         
-# mit Visualisierung einer Glaettungslinie und Aenderung der Farbe der               Punkte, damit Linie erkennbar
+# mit Visualisierung einer Glaettungslinie und Aenderung der Farbe der               
+# Punkte, damit Linie erkennbar
 lower = list(continuous = wrap("smooth_loess", colour = "steelblue1")))
 ```
 
@@ -283,6 +286,13 @@ head(cps_wh_externalsTraining)
 # wird einer der Variablen aussortiert.
 cor(cps_wh_externals[, c("IFR", "AvgHealth", "InternetStability", "BusinessConfidence", "ParkingSpaceAvailability", "Congestion")], cps_wh_externals[, c("IFR", "AvgHealth", "InternetStability", "BusinessConfidence", "ParkingSpaceAvailability", "Congestion")]) %>% as.data.frame()
 
+# TODO: Neues Kommentar
+# Kommentar: 
+# Eine starke Korrelation wurde zwischen InternetStability und BusinessCondifdence, 
+# sowie zwischen Congestion und ParkingSpaceAvailability gefunden. 
+# Fuer die Erstellung unseres Modells werden BusinessConfidence und Congestion nicht 
+# betrachtet.
+
 # Kommentar:
 # Um eine starke Multikollinearität zwischen BusinessConfidence und 
 # InternetStability zu vermeiden, da beide Variablen Werte ueber 0.8 zeigen,
@@ -322,11 +332,11 @@ evaluation[evaluation$Model == "m1_1",]$sMAPE =
 evaluation[evaluation$Model == "m1_2",]$sMAPE = 
   smape(m1_2$model$IFR, m1_2$fitted.values) 
 # evaluation[evaluation$Model == "m1_3",]$sMAPE = 
-smape(m1_3$model$IFR, m1_3$fitted.values) 
+# smape(m1_3$model$IFR, m1_3$fitted.values) 
 evaluation[evaluation$Model == "m1_4",]$sMAPE = 
   smape(m1_4$model$IFR, m1_4$fitted.values) 
 # evaluation[evaluation$Model == "m1_5",]$sMAPE = 
-smape(m1_5$model$IFR, m1_5$fitted.values) 
+# smape(m1_5$model$IFR, m1_5$fitted.values) 
 
 #R^2 berechnen
 evaluation[evaluation$Model == "m1_1",]$R = summary(m1_1)$r.squared
@@ -491,16 +501,20 @@ Modelle. Dabei ueberpruefen wir das endgueltige Modell Modell m1_1_4_2 am Ende
 auf Overfitting indem die Fehlerkennzahlen fuer TestSet berechnen. 
 Dies verlangt, dass fuer das TestSet Vorhersagen erstellt werden mit der 
 `predict()` Funktion.
+
+*Overfitting ueberpruefen*
+Zum Schluss vergleichen wir wie unser Modell sich schlägt wenn wir es mit 
+den Testdaten überprüfen. Damit wird einem Overfitting vorgebeugt, also das 
+unsere Modell zugenau auf die Trainingsdaten angepasst wurde. 
+`predict()` Funktion.
 ```{r}
+
+#TODO Geändert
 # Bestes Modell aus evaluation filtern und am Ende an dem TestSet anhaengen
 evaluation = data.frame(subset(evaluation[,1:3], Model == "m1_1_4_2"))
 
-# Test-Daten mit der Kombination aus dem besten Modell
-pred1 = lm(IFR ~ AvgHealth + ParkingSpaceAvailability + 
-                InternetStability, data = cps_wh_externalsTest)
-
-# Vorhersage mit Test-Daten treffen
-pred1 = predict(pred1, cps_wh_externalsTest)  
+# Modell mit Testdaten testen
+pred1 = predict(m1_1_4_2, cps_wh_externalsTest)  
 
 # Data Frame erweitern
 evaluationNeu = rbind(data.frame(Model = c("Test_Model"),
@@ -587,6 +601,11 @@ predictDF_bestmodel[1] = round(predictDF_bestmodel$Vorhersage, 4)
 # Tabellenkopf anzeigen
 head(predictDFBaseline)
 head(predictDF_bestmodel)
+
+wilke = externals[,"Year"==22021]
+externals_202101 = externals[externals$Year == "2021" & externals$Month=="1",]
+[evaluation$Model == "m1_1",]
+wilke
 ```
 Kommentar zu Aufgabe 12: Wir nehmen alle historischen Werte von Januar, um den 
 Januar 2021 zu bestimmen. Wir gehen die Wette ein, da die Vorhersage basierend
