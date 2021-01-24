@@ -32,6 +32,7 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 
 ```{r}
 wilke_getraenke = NULL 
+start_date = as.Date("2021-01-03")
 
 add_new_row <- function(wilke_getraenke, amount, date, drink, volumn, flasche) {
   for (i in 1:amount) {
@@ -144,4 +145,6 @@ write_xlsx(wilke_getraenke, )
 
 
 write.csv(wilke_getraenke,"C:\\Users\\Peter\\Desktop\\MyData.csv", row.names = FALSE)
+
+write.csv(wilke_getraenke,"/Users/wilkeprivateaccount/git/Supply_Chain_Analytics/Postkarte/daten.csv", row.names = FALSE)
 ```
